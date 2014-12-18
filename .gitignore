@@ -73,3 +73,13 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+# =========================
+# Blender
+# =========================
+
+# Blender Temp Files
+*.blend1
+*.blend2
+*.exr
