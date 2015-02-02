@@ -36,7 +36,7 @@
 %
 %           For LFP data, please use a 'lowpass' with a value of 500 Hz. 
 %
-%       flitFs:
+%       filtFs:
 %           Double/integer. The filter frequency used in the filters.
 %
 %	Outputs:
@@ -63,7 +63,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = DownFilter( override, CSCData, dsFlag, dsFs, filtFlag, filtType, flitFs)
+function [] = DownFilter( override, CSCData, dsFlag, dsFs, filtFlag, filtType, filtFs)
 
 if dsFlag && ~(dsFs == 30000 || dsFs == 10000 || dsFs == 2000 || dsFs == 1000)
     fprintf('Need to choose a downsampled frequency: 30000, 10000, 2000, 1000\n')
@@ -75,8 +75,8 @@ if filtFlag && ~(isequal(filtType, 'highpass') || isequal(filtType, 'lowpass'))
     return;
 end % END IF
 
-if flitFs > 0.5*dsFs
-    fprintf('Filtered frequency needs to be less than 1/2 * samples (dsFs).\n')
+if filtFs > 0.5*dsFs
+    fprintf('Filtered frequency needs to be less than or equal to 1/2 * samples (dsFs).\n')
     return;
 end % END IF
 
@@ -85,7 +85,7 @@ end % END IF
 
 cscExt = '.h5';
 dsStr = num2str(dsFs);
-fsStr = num2str(flitFs);
+fsStr = num2str(filtFs);
 
 CSCMAT = ['exp', expDate];
 
@@ -129,14 +129,14 @@ end % END IF
 if filtFlag
     if isequal(filtType, 'highpass')
         N = 10;         % order
-        Fpass = flitFs; % Passband frequency
+        Fpass = filtFs; % Passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
         h = fdesign.highpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.freq);
         Hf = design(h,'ellip');
     elseif isequal(filtType, 'lowpass')
         N = 10;         % order
-        Fpass = flitFs; % Passband frequency
+        Fpass = filtFs; % Passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
         h = fdesign.lowpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.freq);
