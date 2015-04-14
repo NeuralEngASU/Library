@@ -29,7 +29,9 @@ if(~isempty(varargin))
 end
 
 % set layout to start at 1
-layout=layout-min(layout(layout>0))+1;
+chan_num_offset=min(layout(layout>0));
+layout=layout-chan_num_offset+1;
+pairlist=pairlist-chan_num_offset+1;
 
 % figure separation distances between electrodes
 pairseps=pairlist(:,1)*0;
