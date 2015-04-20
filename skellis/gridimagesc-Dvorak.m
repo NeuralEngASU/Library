@@ -147,9 +147,15 @@ for k=1:length(chanlist)
 
     % plot the data
     LH(k)=image(x,y,z(:,:,chanlist(k)),'CDataMapping','scaled','Parent',AXH(k));
+    
+    % handle nans
+    %set(LH(k),'AlphaData',~isnan(z(:,:,chanlist(k))));
+    set(AXH(k),'Color',[0.8 0.8 0.8]);
+
+    % apply axes options
     set(AXH(k),AXOPT(k));
 
-    % set properties
+    % set axes properties
     set(AXH(k),AXISARGS);
     xlabel(thisax_xlbl);
     ylabel(thisax_ylbl);

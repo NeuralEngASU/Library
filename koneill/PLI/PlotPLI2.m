@@ -26,6 +26,7 @@ tmpR(sub2ind([numChans,numChans], chanPairs(:,1), chanPairs(:,2))) = R;
 tmpR(sub2ind([numChans,numChans], chanPairs(:,2), chanPairs(:,1))) = R;
 tmpR(logical(eye(numChans))) = ones(1,numChans);
 
+<<<<<<< HEAD
 
 colormap('jet')
 
@@ -34,6 +35,13 @@ if strcmp(type, 'confusion')
     imagesc(tmpPLI, [0, 0.15]);
     
 elseif strcmp(type, 'space-invader')
+=======
+if strcomp(type, 'confusion')
+    
+    imagesc(tmpPLI, [0, 0.15]);
+    
+elseif strcomp(type, 'space-invader')
+>>>>>>> origin/master
     %%
     layout = g.layout;
     
@@ -122,18 +130,31 @@ elseif strcmp(type, 'space-invader')
     set(gca, 'XTickLabel', [])
     set(gca, 'YTick', [])
     set(gca, 'YTickLabel', [])
+<<<<<<< HEAD
         
+=======
+    
+>>>>>>> origin/master
     cData = colorbar('Location', 'East');
     
     set(cData, 'YAxisLocation','right')
     set(cData, 'YTick', [0, 1])
     set(cData, 'YTickLabel', [0, maxPLI])
     set(cData, 'TickDirection', 'Out')
+<<<<<<< HEAD
 %     set(cData, 'Label', 'PLI')
     cData.Label.String = 'PLI';
     
     savefig(fullfile(pathName, sprintf('%s_PLI', g.subject)))
     print(fullfile(pathName, sprintf('%s_PLI', g.subject)), '-dpng')
+=======
+    set(cData, 'Label', 'PLI')
+%     set(cData, 'YLabel', 'PLI')
+
+    
+    save(fullfile(pathName, sprintf('%s_PLI', g.subject)))
+    print(fullfile(pathName, sprintf('%s_PLI', g.subject)), '-png')
+>>>>>>> origin/master
     
     
     %%
@@ -210,6 +231,7 @@ elseif strcmp(type, 'space-invader')
     set(gca, 'XTickLabel', [])
     set(gca, 'YTick', [])
     set(gca, 'YTickLabel', [])
+<<<<<<< HEAD
         
     cData = colorbar('Location', 'East');
     
@@ -222,6 +244,11 @@ elseif strcmp(type, 'space-invader')
     
     savefig(fullfile(pathName, sprintf('%s_R', g.subject)))
     print(fullfile(pathName, sprintf('%s_R', g.subject)), '-dpng')
+=======
+    
+    save(fullfile(pathName, sprintf('%s_R', g.subject)))
+    print(fullfile(pathName, sprintf('%s_R', g.subject)), '-png')
+>>>>>>> origin/master
     
     %%    
     

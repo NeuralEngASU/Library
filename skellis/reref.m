@@ -1,36 +1,38 @@
 function [x,layout,spacing,ref]=reref(x,varargin)
 % REREF Apply software rereferencing to time series
-%    X=REREF2(X) performs a common-average re-reference of the data in X, 
+%    X=REREF(X) performs a common-average re-reference of the data in X, 
 %    in which rows are observations and columns are channels of data.
 %
-%    X=REREF2(X,'unr') does not modify the data in any way.
+%    X=REREF(X,'unr') does not modify the data in any way.
 %
-%    X=REREF2(X,'car') (default) performs a common-average re-reference by 
+%    X=REREF(X,'car') (default) performs a common-average re-reference by 
 %    subtracting the average of all channels from each channel.  No
 %    additional parameters are required.
 %
-%    X=REREF2(X,'war') performs weighted-average re-reference, in which the
+%    X=REREF(X,'war') performs weighted-average re-reference, in which the
 %    contribution of each channel is weighted by the inverse of its 
 %    interquartile range (the difference between the 75th and 25th 
 %    percentiles).  No additional parameters are required.
 %
-%    X=REREF2(X,'sar',LAYOUT,SPACING) performs a spatial-average 
+%    X=REREF(X,'sar',LAYOUT,SPACING) performs a spatial-average 
 %    re-reference, in which the contribution of each channel to the average
 %    is weighted according to distance from the channel being 
 %    re-referenced.  The weighting is given by a Gaussian function centered
 %    at the channel being re-referenced, with default standard deviation 
 %    0.5mm.
 %
-%    X=REREF2(X,'sar',LAYOUT,SPACING,SIGMA) performs the spatial-average
+%    X=REREF(X,'sar',LAYOUT,SPACING,SIGMA) performs the spatial-average
 %    re-referencing described above, with standard deviation specified by
 %    SIGMA.  SIGMA should be specified in units of millimeters.
 %
-%    X=REREF2(X,'pwr',LAYOUT,SPACING) performs a pair-wise re-reference, in
+%    X=REREF(X,'pwr',LAYOUT,SPACING) performs a pair-wise re-reference, in
 %    which new bipolar channels are formed as the difference between
 %    physical neighbors, and are located midway between the pair.  This
 %    option is not fully tested.
 %
-%    X=REREF2(...,'badchan',BADCHAN) uses vector of channels specified in
+%    X=REREF(X,'dtr') detrends each column of data in 200 msec segments.
+%
+%    X=REREF(...,'badchan',BADCHAN) uses vector of channels specified in
 %    BADCHAN to exclude certain channels from contributing to the
 %    re-reference.
 
@@ -58,17 +60,14 @@ goodchan=setdiff(1:size(x,2),badchan);
 
 % evaluate
 switch(lower(METHOD))
-    case 'unr'
-        % no action
+    case 'unr' % no action
         return;
 
-    case 'car'
-        % subtract the common average
+    case 'car' % common average re-referencing
         ref=mean(x(:,goodchan),2);
         x=x-repmat(ref,[1 size(x,2)]);
         
-    case 'bankcar'
-        % subtract common average by 16-chan bank
+    case 'bankcar' % common average re-referencing by 16-chan bank
         num_banks=ceil(size(x,2)/16);
         ref=zeros(size(x,1),num_banks);
         for b=1:num_banks
@@ -78,7 +77,7 @@ switch(lower(METHOD))
             x(:,bank_allchan)=x(:,bank_allchan)-repmat(ref(:,b),[1 length(bank_allchan)]);
         end
 
-    case 'war'
+    case 'war' % weighted average re-referencing
         % find interquartile range
         percentiles=prctile(x,[25 75]);
         iq=abs(diff(percentiles,1));
@@ -92,7 +91,7 @@ switch(lower(METHOD))
         % scaled rereferencing
         x=x-ref;
 
-    case 'sar'
+    case 'sar' % spatial average re-referencing
         % pull out layout and spacing data
         layout=varargin{1};
         spacing=varargin{2};
@@ -140,7 +139,7 @@ switch(lower(METHOD))
         end
         x=x-ref;
 
-    case 'pwr'
+    case 'pwr' % pair-wise re-referencing
         % pull out layout and spacing data
         layout=varargin{1};
         spacing=varargin{2};
@@ -176,6 +175,12 @@ switch(lower(METHOD))
             x(:,k)=tmpdata(:,neighbors(k,1))-tmpdata(:,neighbors(k,2));
         end
         clear tmpdata;
+        
+    case 'dtr' % detrend: subtract smooth version of signal
+        for k=1:size(x,2)
+            %x(:,k)=detrend(x(:,k),'linear',1:200:size(x,1));
+            x(:,k)=x(:,k)-smooth(x(:,k),1e3,'sgolay');
+        end
         
     otherwise
         error('reref:method','Unknown re-referencing method specified');
