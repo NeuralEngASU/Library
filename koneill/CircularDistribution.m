@@ -1,4 +1,4 @@
-
+figure (2)
 clf
 subplot(2,2,1)
 theta = linspace(-pi, pi, 1000);

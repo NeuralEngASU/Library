@@ -35,20 +35,21 @@
 %           The output of PLI for two sine waves with phase differences
 %           from 0:pi is approximated with the code below:
 %
-%           tIdx = 1:1000;
-%           phaseAngle = linspace(0, pi, length(tIdx));
-%           sig1 = sin(pi*tIdx/100);
-%           PLI = zeros(1,length(tIdx));
-%           for kk = 1:length(phaseAngle)
-%                 sig2 = sin(pi*tIdx/100 + phaseAngle(kk));
-% 
-%                 sig1Phi = atan(imag(hilbert(sig1))./sig1);
-%                 sig2Phi = atan(imag(hilbert(sig2))./sig2);
-% 
-%                 deltaPhi = sig1Phi - sig2Phi;
-%                 PLI(kk) = abs(mean(sign(deltaPhi)));
-%           end
-%           plot(phaseAngle, PLI); title('PLI v phase'); xlabel('Phase, radians'); ylabel('PLI');
+figure(2)
+          tIdx = 1:1000;
+          phaseAngle = linspace(0, pi, length(tIdx));
+          sig1 = sin(pi*tIdx/100);
+          PLI = zeros(1,length(tIdx));
+          for kk = 1:length(phaseAngle)
+                sig2 = sin(pi*tIdx/100 + phaseAngle(kk));
+
+                sig1Phi = atan(imag(hilbert(sig1))./sig1);
+                sig2Phi = atan(imag(hilbert(sig2))./sig2);
+
+                deltaPhi = sig1Phi - sig2Phi;
+                PLI(kk) = abs(mean(sign(deltaPhi)));
+          end
+          plot(phaseAngle, PLI); title('PLI v phase'); xlabel('Phase, radians'); ylabel('PLI');
 %
 %
 %       Usage:
