@@ -1,35 +1,63 @@
 
 
-function [] = EMD_Sz_Stats(xlfile_S, xlfile_NS, filepath)
+function [] = EMD_Sz_Stats(filepath,xlfile,ictal_state)
 
-%load arrays
-load([filepath 'Raw_onset.mat']);
-load([filepath 'DNonset.mat']);
-load([filepath 'CARonset.mat']);
-load([filepath 'DN_CARonset.mat']);
+%Read seizure onset times from excel file
+clonset = xlsread(xlfile,1,'L3:L103');
 
-
-%load seizure onset times from excel file
-onset = xlsread(xlfile_S,1,'K3:K103');
-
-%load clip start times from excel file
-sz_clpstrt = xlsread(xlfile_S,1,'H3:H103');
+%Read clip start times from excel file
+clpstrt = xlsread(xlfile,1,'J3:J103');
 
 %Read clinical onset channel from excel file
-szch = xlsread(xlfile_S,1,'L3:L103');
+clszch = xlsread(xlfile,1,'M3:M103');
 
-for n = 1:length(onset)
+%Read sampling rate from excel file
+Fs = xlsread(xlfile,1,'H3:H103');
+
+%create aray of clinical onset and clip start times
+for n = 1:length(clonset)
     %convert seizure onset times to number of samples
-    convonset(n,:) = (onset(n,(1:2))*3600) + (onset(n,(4:5))*60) + (onset(n,(7:8))*500);
+    clonsetsamps(n,:) = (clonset(n,(1:2))*3600) + (clonset(n,(4:5))*60) + (clonset(n,(7:8))*500);
     
     %convert clip start times to number of samples
-    sz_clpstrtsamps(n,:) = (sz_clpstrt(n,(1:2))*3600) + (sz_clpstrt(n,(4:5))*60) + (sz_clpstrt(n,(7:8))*500);
+    clpstrtsamps(n,:) = (clpstrt(n,(1:2))*3600) + (clpstrt(n,(4:5))*60) + (clpstrt(n,(7:8))*500);
+end
+
+
+%load arrays
+type = ['Raw' 'CAR' 'DN' 'DN_CAR'];
+
+for t = 1:4
     
-    for w = 1:length(Raw_onset)
+files = dir([folderpath '\' ictal_state '\WinData\' type(t) , '/*.mat'])
+
+for f = 1:length(files)
+    disp (files(f).name)
+    d = load([folderpath,'/',files(f).name]);
+    
+    m = fieldnames(d);
+    IMFperWin = d.(m{1});
+    $$EMDonset??
+
+    %%
+    threshold = char('mode', 'avg', 'sd')
+    for t = 1:3
+    EMD = EMDonset.(threshold(t,:));
+
+    %convert EMDonset window number to number of samples and add to clip onset
+    EMDsamps = ((EMD.*2)+2)+clpstrtsamps(n,:);
+
+    %convert EMD detected onset window to sample number within clip
+%start of clip would be (idwin*2)-1...to get median of window changed to
+%(idwin*2)+1
+emdonset = ((idwin * 2) + 1) * 500;
+    
+    for ch = 1:length(EMDsamps)
         
         %Compare EMD detected onset to clinical onset in designated onset
         %channel
-        R_diff(w) = abs(convonset(n) - (clpstrtsamps(n) + Raw_onset(szch(n),w)));
+        R_diff(ch,:) = abs((EMDsamps(ch,:)) - clonsetsamps(n,:) );
+    end
         
         %Determine if the difference is within one minute(30000 samples) and
         %write an 'x' in the excel column if it is.
@@ -50,7 +78,7 @@ for n = 1:length(onset)
     
     for w = 1:length(DNonset)
         %Compare EMD detected onset to clinical onset
-        DNdiff = convonset(n) - (clpstrtsamps(n) + DNonset);
+        DNdiff = clonsetsamps(n) - (clpstrtsamps(n) + DNonset);
         %Label true positives
         if DNdiff <= 30000
            DN_TP(w) = 1;
@@ -67,7 +95,7 @@ for n = 1:length(onset)
     for w = 1:length(CARonset)
         
         %Compare EMD detected onset to clinical onset
-        CARdiff = convonset(n) - (clpstrtsamps(n) + CARonset);
+        CARdiff = clonsetsamps(n) - (clpstrtsamps(n) + CARonset);
         
         %Label true positives
         if CARdiff <= 30000
@@ -86,7 +114,7 @@ for n = 1:length(onset)
     for w = 1:length(DN_CARonset)
         
         %Compare EMD detected onset to clinical onset
-        DN_CARdiff = convonset(n) - (clpstrtsamps(n) + DN_CARonset);
+        DN_CARdiff = clonsetsamps(n) - (clpstrtsamps(n) + DN_CARonset);
         
         %Label true positives
         if DN_CARdiff <= 30000
@@ -102,6 +130,7 @@ for n = 1:length(onset)
     
 end
 
+end
 %%
 %Concatinate the different analysis types into one matrix and save
 %Column 1 = Raw, 2 = Denoised, 3 = CAR, 4 = DN+CAR

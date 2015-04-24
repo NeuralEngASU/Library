@@ -16,11 +16,11 @@ for f = 1:length(files)
     
     for ch = 1:size(data,1)
         disp(ch)
-        CARdata(ch,:) = data(ch,:) - sigavg;
+        DNCARdata(ch,:) = data(ch,:) - sigavg;
     end
     
-    save(['D:\Kari\ECoG\Data\' ictal_state '\ProcData\CAR\' patnum '_CAR.mat'],'CARdata');
+    save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\DN_CAR\' patnum '_DNCAR.mat'],'DNCARdata');
     
-    clear CARdata data sigavg patnum fieldnames
+   % clear CARdata data sigavg patnum fieldnames
     
 end
