@@ -2,25 +2,19 @@
 
 function [] = EMD_Sz_Stats(filepath,xlfile,ictal_state)
 
-%Read seizure onset times from excel file
+%Read seizure onset and clip start times, clinical onset channel and sampling rate from excel file
 clonset = xlsread(xlfile,1,'L3:L103');
-
-%Read clip start times from excel file
 clpstrt = xlsread(xlfile,1,'J3:J103');
-
-%Read clinical onset channel from excel file
 clszch = xlsread(xlfile,1,'M3:M103');
-
-%Read sampling rate from excel file
 Fs = xlsread(xlfile,1,'H3:H103');
 
 %create aray of clinical onset and clip start times
 for n = 1:length(clonset)
-    %convert seizure onset times to number of samples
-    clonsetsamps(n,:) = (clonset(n,(1:2))*3600) + (clonset(n,(4:5))*60) + (clonset(n,(7:8))*500);
     
-    %convert clip start times to number of samples
+    %convert seizure onset and clip start times to number of samples
+    clonsetsamps(n,:) = (clonset(n,(1:2))*3600) + (clonset(n,(4:5))*60) + (clonset(n,(7:8))*500);
     clpstrtsamps(n,:) = (clpstrt(n,(1:2))*3600) + (clpstrt(n,(4:5))*60) + (clpstrt(n,(7:8))*500);
+    
 end
 
 
@@ -41,8 +35,8 @@ for f = 1:length(files)
 
     %%
     threshold = char('mode', 'avg', 'sd')
-    for t = 1:3
-    EMD = EMDonset.(threshold(t,:));
+    for thresh = 1:3
+    EMD = EMDonset.(threshold(thresh,:));
 
     %convert EMDonset window number to number of samples and add to clip onset
     EMDsamps = ((EMD.*2)+2)+clpstrtsamps(n,:);

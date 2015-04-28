@@ -90,6 +90,7 @@ for f = 1:length(files)
             
             
             %Pad array
+            %Creates a structure of 3 matrices - each is channel x first window of onset in that channel 
             i = 20-length(szonset);
             if id == 1
                 EMDonset.mode(ch,:) = padarray(szonset,[0 i],NaN,'post');

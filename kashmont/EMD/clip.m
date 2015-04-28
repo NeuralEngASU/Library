@@ -71,9 +71,9 @@ clpend = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
-[~,clpnum] = xlsread(xlfile,ictal_state,'A3:A100');
-[~,day] = xlsread(xlfile,ictal_state,'E3:E100');
-sznum = xlsread(xlfile,ictal_state,'F3:F100');
+[~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
+[~,day] = xlsread(xlfile,ictal_state,'D3:D4');
+sznum = xlsread(xlfile,ictal_state,'E3:E4');
 
 %Loop through array 'clpnum' to open each file and form the clips
 for n = 1:length(clpnum)
@@ -90,7 +90,7 @@ for n = 1:length(clpnum)
     ns = header.ns;
     
     %Read total number of channels from excel file
-    totch = xlsread(xlfile,ictal_state,'N3:N100');
+    totch = xlsread(xlfile,ictal_state,'O3:O4');
     
     %Scale data (linear scaling)
     scalefac = (header.physicalMax - header.physicalMin)./(header.digitalMax - header.digitalMin);
@@ -120,7 +120,7 @@ for n = 1:length(clpnum)
     convflstrt(n,:) = ((flhr*3600) + (flmm*60) + flss)*Fs;
     
     %load seizure onset times from excel file
-    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L100');
+    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L4');
 %     
 %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
 %         new_hr = str2double(clonset{n}(1:2)) + 24;
@@ -131,6 +131,11 @@ for n = 1:length(clpnum)
     szhr = str2double(clonset{n}(1:2));
     szmm = str2double(clonset{n}(4:5));
     szss = str2double(clonset{n}(7:8));
+    
+%         %convert seizure onset times to number of samples
+%     szhr = str2double(clonset(1:2));
+%     szmm = str2double(clonset(4:5));
+%     szss = str2double(clonset(7:8));
   
     if (szhr) < (flhr)
         l = 1;
@@ -166,7 +171,7 @@ for n = 1:length(clpnum)
         %fseek reads in bytes
         %Each data points consists of 2 bytes
         %Brings cursor to beginning of first record of channel desired
-        fseek(fid,(256+(ns * 256)),'bof');
+        fseek(fid,((256+(ns * 256))+(samps*2*ch)),'bof');
         
         %Brings cursor to beginning of desired record within the desired
         %channel
@@ -200,15 +205,10 @@ for n = 1:length(clpnum)
     clear d
     rmzeros = find(P(:,1),1,'first');
     
-    %start at channel 2 to remove 'Event' channel that is included in EDF
-    %file
-    
-    for ch = 1:totch(n)+1
+    for ch = 1:totch(n)
         data(ch,:) = P((rmzeros:end),ch);
     end
 
-    data = data((2:end),:);
-    
     clpstart(n,:) = rmzeros;
     clpfin(n,:) = find(P,1,'last');
     
@@ -262,12 +262,48 @@ for n = 1:length(clpnum)
     
     %Create a patient number
     sz = num2str(sznum(n));
-    patnum = ([clpnum{n}(1:8) 'NonSz' sz]);
+    patnum = ([clpnum{n}(1:8) 'Sz' sz]);
+     
+%%
+%Kevin
+
+PLIoffset = [];
+    [~,sztimes] = xlsread(xlfile,'PLItest','P3:P4');
+    
+    for s = 1:size(sztimes,1)
+    
+    %convert seizure onset times to number of samples
+    kszhr = str2double(sztimes{s}(1:2));
+    kszmm = str2double(sztimes{s}(4:5));
+    kszss = str2double(sztimes{s}(7:8));
+     
+    %convert seizure onset times to number of samples
+    convszstrt(s,:) = ((kszhr*3600) + (kszmm*60) + kszss)*Fs;
+    
+    %calculate seizure offset from start of clip in number of samples
+    koffset(s,:) = convszstrt(s) - clpstrt;
+  
+    %Convert the offset sample number to a time (24hr clock)
+    ofset_hr = floor((koffset(s,:)/Fs)/3600);
+    ofset_mm = floor(((koffset(s,:)/Fs)-(ofset_hr*3600))/60);
+    ofset_ss = (koffset(s,:)/Fs)-(ofset_hr*3600)-(ofset_mm*60);
+  
+    PLIoffset{end+1} = ([num2str(ofset_hr) ':' num2str(ofset_mm) ':' num2str(ofset_ss)]);
+    
+    end
+
+    %Create header
+    header.Fs = Fs;
+    header.GlobalClipStartTime = clpbeg;
+    header.SeizureOnsetTime = sztimes;
+    header.SzOffset = PLIoffset;
+    
+    %%
     
     %Save the data structure as the patient number created above
-    %save(['D:\Kari\ECoG\Data\clips\' ictal_state '\' patnum '.mat'],'data');
+    %save(['D:\Kari\ECoG\Data\' ictal_state '\clips\longsamp\' patnum '.mat'],'data');
     %save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','-v7.3');
-    save(['E:\data\human CNS\EMD\' ictal_state '\clips\testclip.mat'],'data','-v7.3');
+     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
 
  
 %     figure;

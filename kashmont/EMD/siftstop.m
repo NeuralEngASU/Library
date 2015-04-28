@@ -11,7 +11,7 @@ s = length(maxpts)+length(minpts);
 
 % stopsift = s<4;
 
-f=(round((length(x))/Fs))*2;
+f=(round((length(x))/Fs));
 
 extdiff=length(maxpts)-length(minpts);
 
