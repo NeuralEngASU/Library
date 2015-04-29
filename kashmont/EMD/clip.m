@@ -62,7 +62,7 @@
 %clplen = Clip length, in minutes (the program will approximate the length of the closest record)
 %ictal_state = either 'Sz' or 'NonSz'
 %%
-function [flstrt,clpbeg,clpend] = clip2 (drive,xlfile,ictal_state,clplen)
+function [flstrt,clpbeg,clpend] = clip(drive,xlfile,ictal_state,clplen)
 %clear all
 
 flstrt = [];
@@ -73,20 +73,18 @@ finrec = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
-<<<<<<< HEAD:kashmont/clip.m
-[~,clpnum] = xlsread(xlfile,ictal_state,'A9:A10');
-[~,day] = xlsread(xlfile,ictal_state,'D9:D10');
-%sznum = xlsread(xlfile,ictal_state,'E3:E4');
-=======
 [~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
-[~,day] = xlsread(xlfile,ictal_state,'D3:D4');
-sznum = xlsread(xlfile,ictal_state,'E3:E4');
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
+[~,day] = xlsread(xlfile,ictal_state,'E3:E4');
+%sznum = xlsread(xlfile,ictal_state,'E3:E4');
+%
+% [~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
+% [~,day] = xlsread(xlfile,ictal_state,'D3:D4');
+% sznum = xlsread(xlfile,ictal_state,'E3:E4');
 
 %Loop through array 'clpnum' to open each file and form the clips
 for n = 1:length(clpnum)
     l = 0;
-      
+    
     %Read in the header of the file
     %Should end up with file looking like: 'D:\ECoGData\2014PP01\2014PP01_D01.edf'
     %\\tsclient\E\
@@ -98,11 +96,7 @@ for n = 1:length(clpnum)
     ns = header.ns;
     
     %Read total number of channels from excel file
-<<<<<<< HEAD:kashmont/clip.m
-    totch = xlsread(xlfile,ictal_state,'O9:O10');
-=======
     totch = xlsread(xlfile,ictal_state,'O3:O4');
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
     
     %Scale data (linear scaling)
     scalefac = (header.physicalMax - header.physicalMin)./(header.digitalMax - header.digitalMin);
@@ -122,8 +116,8 @@ for n = 1:length(clpnum)
     %Read the file start time from the header and write it to excel
     %sheet
     flstrt{end+1} = header.starttime;
-%     flstrt_r = sprintf('H%i', r);
-%     xlswrite (xlfile,flstrt','Sheet1',flstrt_r);
+    %     flstrt_r = sprintf('H%i', r);
+    %     xlswrite (xlfile,flstrt','Sheet1',flstrt_r);
     
     %convert file start times to number of samples
     flhr = str2double(header.starttime(1:2));
@@ -132,27 +126,24 @@ for n = 1:length(clpnum)
     convflstrt(n,:) = ((flhr*3600) + (flmm*60) + flss)*Fs;
     
     %load seizure onset times from excel file
-<<<<<<< HEAD:kashmont/clip.m
-    [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
-=======
+    %     [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
     [~,clonset] = xlsread(xlfile,ictal_state,'L3:L4');
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
-%     
-%     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
-%         new_hr = str2double(clonset{n}(1:2)) + 24;
-%         clonset{n}(1:2) = num2str(new_hr);   
-%     end
+    %
+    %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
+    %         new_hr = str2double(clonset{n}(1:2)) + 24;
+    %         clonset{n}(1:2) = num2str(new_hr);
+    %     end
     
     %convert seizure onset times to number of samples
     szhr = str2double(clonset{n}(1:2));
     szmm = str2double(clonset{n}(4:5));
     szss = str2double(clonset{n}(7:8));
     
-%         %convert seizure onset times to number of samples
-%     szhr = str2double(clonset(1:2));
-%     szmm = str2double(clonset(4:5));
-%     szss = str2double(clonset(7:8));
-  
+    %         %convert seizure onset times to number of samples
+    %     szhr = str2double(clonset(1:2));
+    %     szmm = str2double(clonset(4:5));
+    %     szss = str2double(clonset(7:8));
+    
     if (szhr) < (flhr)
         l = 1;
         szhr = szhr + 24;
@@ -220,10 +211,7 @@ for n = 1:length(clpnum)
     %represents the beginning of the clip)
     disp('reshaping')
     for ch = 1:ns
-<<<<<<< HEAD:kashmont/clip.m
-=======
         disp(ch)
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
         P(:,ch) = reshape(((d{ch})'),((length(d{ch}))*238),1);
     end
     clear d
@@ -232,7 +220,7 @@ for n = 1:length(clpnum)
     for ch = 1:totch(n)
         data(ch,:) = P((rmzeros:end),ch);
     end
-
+    
     clpstart(n,:) = rmzeros;
     clpfin(n,:) = clpstart(n,:)+size(data(n,:),2);
     
@@ -256,12 +244,12 @@ for n = 1:length(clpnum)
     clpshr = num2str(cls_hr(n,:));
     clpsmm = num2str(cls_mm(n,:));
     clpsss = num2str(cls_ss(n,:));
-          
+    
     clpbeg{end+1} = ([clpshr '.' clpsmm '.' clpsss]);
     
     %Determine the sample number associated with the clip end, if the
     %sampling began at 00:00:00.
-     clpfin_samps(n,:) = convflstrt(n,:) + clpfin(n,:);
+    clpfin_samps(n,:) = convflstrt(n,:) + clpfin(n,:);
     
     %Convert the clip start sample number to a time (24hr clock)
     clf_hr(n,:) = floor((clpfin_samps(n,:)/Fs)/3600);
@@ -275,121 +263,74 @@ for n = 1:length(clpnum)
     clpfhr = num2str(clf_hr(n,:));
     clpfmm = num2str(clf_mm(n,:));
     clpfss = num2str(clf_ss(n,:));
-          
-    clpend{end+1} = ([clpfhr '.' clpfmm '.' clpfss]);    
+    
+    clpend{end+1} = ([clpfhr '.' clpfmm '.' clpfss]);
     
     %Create a patient number
-<<<<<<< HEAD:kashmont/clip.m
     %sz = num2str(sznum(n));
     %patnum = ([clpnum{n}(1:8) 'Sz' sz]);
     patnum = ([clpnum{n}(1:8)]);
-     
-% %%
-% %Kevin
-% disp('PLI info')
-% PLIoffset = [];
-%     [~,sztimes] = xlsread(xlfile,'PLItest','P9:P10');
-%     
-%     for s = 1:size(sztimes,1)
-%     
-%     %convert seizure onset times to number of samples
-%     kszhr = str2double(sztimes{s}(1:2));
-%     kszmm = str2double(sztimes{s}(4:5));
-%     kszss = str2double(sztimes{s}(7:8));
-%      
-%     if l==1
-%         kszhr = kszhr + 24;
-%     end
-%     
-%     %convert seizure onset times to number of samples
-%     convszstrt(s,:) = ((kszhr*3600) + (kszmm*60) + kszss)*Fs;
-%     
-%     %calculate seizure offset from start of clip in number of samples
-%     koffset(s,:) = convszstrt(s) - clpstart_samps(n);
-%   
-% %     koffset = offset;
-%     
-%     %Convert the offset sample number to a time (24hr clock)
-%     ofset_hr = floor((koffset(s,:)/Fs)/3600);
-%     ofset_mm = floor(((koffset(s,:)/Fs)-(ofset_hr*3600))/60);
-%     ofset_ss = (koffset(s,:)/Fs)-(ofset_hr*3600)-(ofset_mm*60);
-%   
-%     PLIoffset{end+1} = ([num2str(ofset_hr) ':' num2str(ofset_mm) ':' num2str(ofset_ss)]);
-%     
-%     end
-% 
-%     %Create header
-%     header.Fs = Fs;
-%     header.GlobalClipStartTime = clpbeg;
-%     header.SeizureOnsetTime = sztimes;
-%     header.SzOffset = PLIoffset;
+    
+    % %%
+    % %Kevin
+    disp('PLI info')
+    PLIoffset = [];
+    [~,sztimes] = xlsread(xlfile,'PLItest','P9:P10');
+    
+    for s = 1:size(sztimes,1)
+        
+        %convert seizure onset times to number of samples
+        kszhr = str2double(sztimes{s}(1:2));
+        kszmm = str2double(sztimes{s}(4:5));
+        kszss = str2double(sztimes{s}(7:8));
+        
+        if l==1
+            kszhr = kszhr + 24;
+        end
+        
+        %convert seizure onset times to number of samples
+        convszstrt(s,:) = ((kszhr*3600) + (kszmm*60) + kszss)*Fs;
+        
+        %calculate seizure offset from start of clip in number of samples
+        koffset(s,:) = convszstrt(s) - clpstart_samps(n);
+        
+        %     koffset = offset;
+        
+        %Convert the offset sample number to a time (24hr clock)
+        ofset_hr = floor((koffset(s,:)/Fs)/3600);
+        ofset_mm = floor(((koffset(s,:)/Fs)-(ofset_hr*3600))/60);
+        ofset_ss = (koffset(s,:)/Fs)-(ofset_hr*3600)-(ofset_mm*60);
+        
+        PLIoffset{end+1} = ([num2str(ofset_hr) ':' num2str(ofset_mm) ':' num2str(ofset_ss)]);
+        
+    end
+    
+    %Create header
+    header.Fs = Fs;
+    header.GlobalClipStartTime = clpbeg;
+    header.SeizureOnsetTime = sztimes;
+    header.SzOffset = PLIoffset;
+    header.PatNum = patnum;
+    header.day = day{1};
     
     %%
     disp('saving')
     %Save the data structure as the patient number created above
     %save(['D:\Kari\ECoG\Data\' ictal_state '\clips\longsamp\' patnum '.mat'],'data');
     %save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','-v7.3');
-%     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
-    save(['E:\data\human CNS\PLI_long_data\LongPLIclip3.mat'],'data','header','-v7.3');
+    %     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
+    save(['D:\data\human CNS\PLI_long_data\', patnum, '_', day{1}, '_long_form.mat'],'data','header','-v7.3');
     
-
-=======
-    sz = num2str(sznum(n));
-    patnum = ([clpnum{n}(1:8) 'Sz' sz]);
-     
-%%
-%Kevin
-
-PLIoffset = [];
-    [~,sztimes] = xlsread(xlfile,'PLItest','P3:P4');
+    %     figure;
+    %     plot(data(50,:));
+    %     title (patnum);
+    %
+    %     xlswrite (xlfile,flstrt',ictal_state,'I3');
+    %     xlswrite (xlfile,clpbeg',ictal_state,'J3');
+    %     xlswrite (xlfile,clpend',ictal_state,'K3');
     
-    for s = 1:size(sztimes,1)
+    clear l Fs clonset clpstart_samps convflstrt convonset fid halfclp offset rec cls_hr cls_mm clp data d P header ns filename n scalefac samps dc center ch clf_hr clf_mm clf_ss clpfhr clpfin clpfin_samps clpfmm clpfss clpshr clpsmm clpsss clpstart patnum szss szmm szhr sz rmzeros r flmm flhr flss cls_ss cls_mmcls_hr
     
-    %convert seizure onset times to number of samples
-    kszhr = str2double(sztimes{s}(1:2));
-    kszmm = str2double(sztimes{s}(4:5));
-    kszss = str2double(sztimes{s}(7:8));
-     
-    %convert seizure onset times to number of samples
-    convszstrt(s,:) = ((kszhr*3600) + (kszmm*60) + kszss)*Fs;
-    
-    %calculate seizure offset from start of clip in number of samples
-    koffset(s,:) = convszstrt(s) - clpstrt;
-  
-    %Convert the offset sample number to a time (24hr clock)
-    ofset_hr = floor((koffset(s,:)/Fs)/3600);
-    ofset_mm = floor(((koffset(s,:)/Fs)-(ofset_hr*3600))/60);
-    ofset_ss = (koffset(s,:)/Fs)-(ofset_hr*3600)-(ofset_mm*60);
-  
-    PLIoffset{end+1} = ([num2str(ofset_hr) ':' num2str(ofset_mm) ':' num2str(ofset_ss)]);
-    
-    end
-
-    %Create header
-    header.Fs = Fs;
-    header.GlobalClipStartTime = clpbeg;
-    header.SeizureOnsetTime = sztimes;
-    header.SzOffset = PLIoffset;
-    
-    %%
-    
-    %Save the data structure as the patient number created above
-    %save(['D:\Kari\ECoG\Data\' ictal_state '\clips\longsamp\' patnum '.mat'],'data');
-    %save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','-v7.3');
-     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
-
- 
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
-%     figure;
-%     plot(data(50,:));
-%     title (patnum);
-%    
-%     xlswrite (xlfile,flstrt',ictal_state,'I3');
-%     xlswrite (xlfile,clpbeg',ictal_state,'J3');
-%     xlswrite (xlfile,clpend',ictal_state,'K3');
-    
-   clear l Fs clonset clpstart_samps convflstrt convonset fid halfclp offset rec cls_hr cls_mm clp data d P header ns filename n scalefac samps dc center ch clf_hr clf_mm clf_ss clpfhr clpfin clpfin_samps clpfmm clpfss clpshr clpsmm clpsss clpstart patnum szss szmm szhr sz rmzeros r flmm flhr flss cls_ss cls_mmcls_hr
-
     
 end
 
@@ -401,7 +342,7 @@ end
 % header.OffsetTme = '9:41:57';
 % header.OffsetSamples = '34917000';
 % header.Fs = '1000';
-% 
+%
 % % data2 = data((1:100),:);
 % % data = data2;
 %  save(['E:\data\human CNS\MacroVmicro\2011clip2.mat'],'data','header','-v7.3');
