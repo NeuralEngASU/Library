@@ -56,8 +56,6 @@ figure; plot(t2,d); hold on; plot(t1,ds_d,'r')
 %             tempChan = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tempChan);
 %             tempChan = tempChan(1:round(data.MetaTags.SamplingFreq/dsFs):end);
 %         end
-=======
-data = openNSx('D:\Kari\201101\20110323-185852\20110323-185852-001.ns4','read','t:1:10000','sample');
 
 %% Creating downsample object
 
@@ -90,5 +88,87 @@ end
 
 %% Extract clips from Utah patient 2011 clinical EDF file
 
+[header,rcd] = edfread('E:\data\human CNS\201101\20110323-185852\Fxxx~ Rxxx_701a652d-b380-4538-95a3-05e5a9058e8c.edf');
 
-Mclip1 = rcd(:,(27000000:28000000));
+%Mclip1
+data = rcd(:,(27000000:28000000));
+hdr.patient = 'Utah Patient 2011'
+hdr.parentfile = 'Fxxx~ Rxxx_701a652d-b380-4538-95a3-05e5a9058e8c.edf'
+hdr.parentfilestarttime = '14.23.03'
+hdr.parentfiledate = '23.03.11'
+hdr.Fs = '1000'
+hdr.clipsamplerange = '27000000 to 28000000'
+hdr.clipstarttime = '21.53.03'
+
+save('E:\data\human CNS\201101\Mclip1.mat','data','hdr');
+%start at sample 350000 to get start of Ns4 file
+
+%Mclip2
+data = rcd(:,(34000000:36000000));
+hdr.patient = 'Utah Patient 201101'
+hdr.parentfile = 'Fxxx~ Rxxx_701a652d-b380-4538-95a3-05e5a9058e8c.edf'
+hdr.parentfilestarttime = '14.23.03'
+hdr.parentfiledate = '23.03.11'
+hdr.Fs = '1000'
+hdr.clipsamplerange = '34000000 to 36000000'
+hdr.clipstarttime = '23.49.43'
+
+save('E:\data\human CNS\201101\Mclip2.mat','data','hdr');
+%start at sample 552000 to get start of Ns4 file
+
+%% xcorr
+
+E9 = data(9,:);
+E10 = data(10,:);
+E6 = data(6,:);
+
+[C9,lag1] = xcorr(E9,E10);
+[C6,lag2] = xcorr(E6,E10);
+
+figure
+subplot(2,1,1);
+plot(lag1,C9/max(C9));
+ylabel('C9');
+grid on
+title('Cross-Correlations')
+subplot(2,1,2);
+plot(lag2,C6/max(C6));
+ylabel('C6');
+grid on
+xlabel('Samples')
+
+[~,I1] = max(abs(C9));     % Find the index of the highest peak
+[~,I2] = max(abs(C6));     % Find the index of the highest peak
+t9 = lag1(I1)              % Time difference between the signals s2,s1
+t6 = lag2(I2)              % Time difference between the signals s3,s1
+
+pad = zeros(abs(t9),1);
+E9b = [pad' E9];
+%E9 = E9(t109:end);
+%E11 = E11(t1011:end);
+
+figure
+ax(1) = subplot(311);
+plot(E10);
+grid on;
+title('E10');
+axis tight
+ax(2) = subplot(312);
+plot(E9b);
+grid on;
+title('E9b');
+axis tight
+ax(3) = subplot(313);
+plot(E11);
+grid on;
+title('E11');
+axis tight
+linkaxes(ax,'xy')
+
+%% Correlation Coeff
+
+Emat = [E9b(1:size(E10,2))' E10' E11'];
+
+R = corrcoef(Emat);
+
+
