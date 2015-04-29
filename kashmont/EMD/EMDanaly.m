@@ -7,6 +7,7 @@
 %ictal_state = Sz or NonSz (also denotes the sheet of the xlfile)
 %datatype = 'Raw', 'DN', 'CAR', 'DNCAR'
 
+
 function EMDanaly(folderpath, xlfile,ictal_state,datatype)
 %folderpath = '/Users/kariashmont/Desktop/Data/clips';
 
@@ -15,7 +16,7 @@ files = dir([folderpath, '/*.mat']);
 Fs = xlsread(xlfile,ictal_state,'H3:H100');
 
 distcomp.feature( 'LocalUseMpiexec', false );
-parpool(16);
+parpool(4);
 
 for f = 1:length(files)
     iddot = strfind(files(f).name,'.');
@@ -39,10 +40,17 @@ for f = 1:length(files)
         
         IMFperWin(ch,:) = nonzeros(IMFs);
         
-    end
-            
+   end
+   
+   header.Patient = patnum(1:8);
+   header.IctalClassifier = patnum(9:end);
+   header.DataType = 'Windowed EMD';
+   header.WindowSize = WinLen;
+   header.WindowOverlab = OvLp;
+   
     %Save processed data and windowing results
-    save(['E:\data\human CNS\EMD\' ictal_state '\WinData\' datatype '\' patnum '_Win.mat'],'IMFperWin');
+    %save(['E:\data\human CNS\EMD\' ictal_state '\WinData\' datatype '\' patnum '_Win.mat'],'IMFperWin');
+    save(['D:\Kari\ECoG\Data\' ictal_state '\WinData\' datatype '\' patnum '_Win.mat'],'IMFperWin','header');
     
     clear IMperWin iddot patnum
     

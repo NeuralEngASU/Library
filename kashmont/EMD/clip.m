@@ -73,9 +73,15 @@ finrec = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
+<<<<<<< HEAD:kashmont/clip.m
 [~,clpnum] = xlsread(xlfile,ictal_state,'A9:A10');
 [~,day] = xlsread(xlfile,ictal_state,'D9:D10');
 %sznum = xlsread(xlfile,ictal_state,'E3:E4');
+=======
+[~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
+[~,day] = xlsread(xlfile,ictal_state,'D3:D4');
+sznum = xlsread(xlfile,ictal_state,'E3:E4');
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
 
 %Loop through array 'clpnum' to open each file and form the clips
 for n = 1:length(clpnum)
@@ -92,7 +98,11 @@ for n = 1:length(clpnum)
     ns = header.ns;
     
     %Read total number of channels from excel file
+<<<<<<< HEAD:kashmont/clip.m
     totch = xlsread(xlfile,ictal_state,'O9:O10');
+=======
+    totch = xlsread(xlfile,ictal_state,'O3:O4');
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
     
     %Scale data (linear scaling)
     scalefac = (header.physicalMax - header.physicalMin)./(header.digitalMax - header.digitalMin);
@@ -122,7 +132,11 @@ for n = 1:length(clpnum)
     convflstrt(n,:) = ((flhr*3600) + (flmm*60) + flss)*Fs;
     
     %load seizure onset times from excel file
+<<<<<<< HEAD:kashmont/clip.m
     [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
+=======
+    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L4');
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
 %     
 %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
 %         new_hr = str2double(clonset{n}(1:2)) + 24;
@@ -206,6 +220,10 @@ for n = 1:length(clpnum)
     %represents the beginning of the clip)
     disp('reshaping')
     for ch = 1:ns
+<<<<<<< HEAD:kashmont/clip.m
+=======
+        disp(ch)
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
         P(:,ch) = reshape(((d{ch})'),((length(d{ch}))*238),1);
     end
     clear d
@@ -217,6 +235,8 @@ for n = 1:length(clpnum)
 
     clpstart(n,:) = rmzeros;
     clpfin(n,:) = clpstart(n,:)+size(data(n,:),2);
+    
+    clear P rmzeros
     
     clear P rmzeros
     
@@ -259,6 +279,7 @@ for n = 1:length(clpnum)
     clpend{end+1} = ([clpfhr '.' clpfmm '.' clpfss]);    
     
     %Create a patient number
+<<<<<<< HEAD:kashmont/clip.m
     %sz = num2str(sznum(n));
     %patnum = ([clpnum{n}(1:8) 'Sz' sz]);
     patnum = ([clpnum{n}(1:8)]);
@@ -312,6 +333,53 @@ for n = 1:length(clpnum)
     save(['E:\data\human CNS\PLI_long_data\LongPLIclip3.mat'],'data','header','-v7.3');
     
 
+=======
+    sz = num2str(sznum(n));
+    patnum = ([clpnum{n}(1:8) 'Sz' sz]);
+     
+%%
+%Kevin
+
+PLIoffset = [];
+    [~,sztimes] = xlsread(xlfile,'PLItest','P3:P4');
+    
+    for s = 1:size(sztimes,1)
+    
+    %convert seizure onset times to number of samples
+    kszhr = str2double(sztimes{s}(1:2));
+    kszmm = str2double(sztimes{s}(4:5));
+    kszss = str2double(sztimes{s}(7:8));
+     
+    %convert seizure onset times to number of samples
+    convszstrt(s,:) = ((kszhr*3600) + (kszmm*60) + kszss)*Fs;
+    
+    %calculate seizure offset from start of clip in number of samples
+    koffset(s,:) = convszstrt(s) - clpstrt;
+  
+    %Convert the offset sample number to a time (24hr clock)
+    ofset_hr = floor((koffset(s,:)/Fs)/3600);
+    ofset_mm = floor(((koffset(s,:)/Fs)-(ofset_hr*3600))/60);
+    ofset_ss = (koffset(s,:)/Fs)-(ofset_hr*3600)-(ofset_mm*60);
+  
+    PLIoffset{end+1} = ([num2str(ofset_hr) ':' num2str(ofset_mm) ':' num2str(ofset_ss)]);
+    
+    end
+
+    %Create header
+    header.Fs = Fs;
+    header.GlobalClipStartTime = clpbeg;
+    header.SeizureOnsetTime = sztimes;
+    header.SzOffset = PLIoffset;
+    
+    %%
+    
+    %Save the data structure as the patient number created above
+    %save(['D:\Kari\ECoG\Data\' ictal_state '\clips\longsamp\' patnum '.mat'],'data');
+    %save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','-v7.3');
+     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
+
+ 
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae:kashmont/EMD/clip.m
 %     figure;
 %     plot(data(50,:));
 %     title (patnum);

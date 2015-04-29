@@ -39,8 +39,14 @@ for i = 1:size(r,1)
     m = fieldnames(d);
     rawdata = d.(m{1});
     
+<<<<<<< HEAD
     for g = 1:size(grids,1)
         sigavg(g,:) = nanmean(rawdata((grids(g,1):grids(g,2)),:));
+=======
+    for ch = 1:size(data,1)
+        disp(ch)
+        DNCARdata(ch,:) = data(ch,:) - sigavg;
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
     end
   
     for g = 1:size(grids,1)
@@ -57,9 +63,15 @@ for i = 1:size(r,1)
     header.DataType = type;
     header.SamplingFrequency = Fs(r(i));
     
+<<<<<<< HEAD
     save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\CAR\' patnum '_CAR.mat'],'data', 'header','-v7.3');
     %save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\DN_CAR\' patnum 'CAR.mat'],'data', 'header');
     
     clear CARdata data rawdata sigavg patnum fieldnames patfiles
+=======
+    save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\DN_CAR\' patnum '_DNCAR.mat'],'DNCARdata');
+    
+   % clear CARdata data sigavg patnum fieldnames
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
     
 end

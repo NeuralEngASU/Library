@@ -3,10 +3,17 @@
 
 function EMDfindSz(folderpath,ictal_state,type)
 
+<<<<<<< HEAD
 files = dir([folderpath '\' ictal_state '\WinData\2HzStop\' type , '/*.mat']);
 
 for f = 1:length(files)
     d = load([folderpath '\' ictal_state '\WinData\2HzStop\' type,'\',files(f).name]);
+=======
+files = dir([folderpath '\' ictal_state '\WinData\' type , '/*.mat']);
+
+for f = 1:length(files)
+    d = load([folderpath '\' ictal_state '\WinData\' type,'\',files(f).name]);
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
     
     disp(files(f).name)
     
@@ -110,6 +117,10 @@ for f = 1:length(files)
         
     end
     
+<<<<<<< HEAD
     save([folderpath '\' ictal_state '\WinData\2HzStop\' type '\' files(f).name],'IMFperWin','EMDonset');
+=======
+    save([folderpath '\' ictal_state '\WinData\' type '\' files(f).name],'IMFperWin','EMDonset');
+>>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
     
 end
