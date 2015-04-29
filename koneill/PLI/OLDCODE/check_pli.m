@@ -39,15 +39,24 @@ order = [1 3];
 if sum(stats(:,3))>sum(stats(:,1)),order=[3 1];end
 b = bar(stats(:,order),'EdgeColor','none');
 if order(1)==1
-    b(1).FaceColor = [0 0.447 0.741];
-    b(1).EdgeColor = [0 0.447 0.741];
-    b(2).FaceColor = [0.85 0.325 0.098];
-    b(2).EdgeColor = [0.85 0.325 0.098];
+%     b(1).FaceColor = [0 0.447 0.741];
+%     b(1).EdgeColor = [0 0.447 0.741];
+%     b(2).FaceColor = [0.85 0.325 0.098];
+%     b(2).EdgeColor = [0.85 0.325 0.098];
+      set(b(1), 'FaceColor', [0 0.447 0.741]);
+      set(b(1), 'FaceColor', [0 0.447 0.741]);
+      set(b(2), 'FaceColor', [0.85 0.325 0.098]);
+      set(b(2), 'FaceColor', [0.85 0.325 0.098]);
 else
-    b(2).FaceColor = [0 0.447 0.741];
-    b(2).EdgeColor = [0 0.447 0.741];
-    b(1).FaceColor = [0.85 0.325 0.098];
-    b(1).EdgeColor = [0.85 0.325 0.098];
+%     b(2).FaceColor = [0 0.447 0.741];
+%     b(2).EdgeColor = [0 0.447 0.741];
+%     b(1).FaceColor = [0.85 0.325 0.098];
+%     b(1).EdgeColor = [0.85 0.325 0.098];
+
+      set(b(2), 'FaceColor', [0 0.447 0.741]);
+      set(b(3), 'FaceColor', [0 0.447 0.741]);
+      set(b(1), 'FaceColor', [0.85 0.325 0.098]);
+      set(b(1), 'FaceColor', [0.85 0.325 0.098]);
 end
 xlim([1 npair]);
 title('Group Means');
@@ -59,8 +68,10 @@ else
 end
 ax(2) = axes('Units','pixels','Position',[60  50 figw-(50+25) 230]);
 b = bar(sig,'EdgeColor','none');
-b.FaceColor = [0.3 0.3 0.3];
-b.EdgeColor = [0.3 0.3 0.3];
+% b.FaceColor = [0.3 0.3 0.3];
+% b.EdgeColor = [0.3 0.3 0.3];
+set(b, 'FaceColor', [0.3 0.3 0.3]);
+set(b, 'FaceColor', [0.3 0.3 0.3]);
 xlim([1 npair]);
 ylim([-1.1 1.1]);
 title('Significance');

@@ -23,11 +23,11 @@
 %           Integer. The sampling frequency for the downsampled data. The
 %           maximum frequency after downsampling is 1/2 dsFs.
 %
-%       flitFlag
+%       filtFlag
 %           Boolean. Determines whether the downsampled data is then
 %           filtered. Or if dsFlag is false, filters the given data.
 %
-%       flitType:
+%       filtType:
 %           String. 'highpass' or 'lowpass' are the only inputs. These
 %           allow the user to control the filtering object.
 %
@@ -36,7 +36,7 @@
 %
 %           For LFP data, please use a 'lowpass' with a value of 500 Hz. 
 %
-%       flitFs:
+%       filtFs:
 %           Double/integer. The filter frequency used in the filters.
 %
 %	Outputs:
@@ -63,26 +63,38 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = DownFilter( override, CSCData, varargin )
+function [] = PNSDownFilter( override, nsxFilePath, varargin )
 
 % Defaults
 DSFLAG = 0;
 DSFS = 2000;
 FILTFLAG = 0;
-FILTTYPE = lowpass;
-FILTFS = 2000;
+FILTTYPE = 'lowpass';
+FILTFS = 1000;
+TIMESTART = 0; % Seconds
+TIMESPAN = 100; % Seconds
 
 % parse varargin
-for i = 1:2:length(varargin)
-    eval([upper(varargin{i}) '=varargin{i+1};']);
+for ii = 1:2:length(varargin)
+    if ~exist(upper(varargin{ii}), 'var')
+        fprintf('Unknown option entry: %s\n', varargin{ii})
+        return;
+    else
+        eval([upper(varargin{ii}) '=varargin{ii+1};']);
+    end
 end
-
 dsFlag = DSFLAG;
 dsFs = DSFS;
 filtFlag = FILTFLAG;
 filtType = FILTTYPE;
 filtFs = FILTFS;
+timeStart = TIMESTART;
+timeSpan = TIMESPAN;
 
+dsFsStr = num2str(dsFs);
+filtFsStr = num2str(filtFs);
+
+clear DSFLAG DSFS FILTFLAG FILTTYPE FILTFS
 
 if dsFlag && ~(dsFs == 30000 || dsFs == 10000 || dsFs == 2000 || dsFs == 1000)
     fprintf('Need to choose a downsampled frequency: 30000, 10000, 2000, 1000\n')
@@ -94,51 +106,53 @@ if filtFlag && ~(isequal(filtType, 'highpass') || isequal(filtType, 'lowpass'))
     return;
 end % END IF
 
-if flitFs > 0.5*dsFs
+if filtFs > 0.5*dsFs
     fprintf('Filtered frequency needs to be less than 1/2 * samples (dsFs).\n')
     return;
 end % END IF
 
 if ~dsFlag && ~filtFlag
-    
     fprintf('Need to specify dsFlag or filtFlag.\n');
     return;
 end % END IF
 
 %% HDF5 File Name
 
-cscExt = '.h5';
-dsStr = num2str(dsFs);
-fsStr = num2str(flitFs);
+pathExpr = '(.+)?\\';
+pathName = regexp(nsxFilePath, pathExpr, 'Tokens');
+pathName = pathName{1}{1};
 
-CSCMAT = ['exp', expDate];
+nameExpr = '.+\\(.+\..+$)';
+fileName = regexp(nsxFilePath, nameExpr, 'Tokens');
+fileName = fileName{1}{1};
+
+fileNameMat = fileName(1:end-4);
 
 if dsFlag
-    CSCMAT = ['exp', expDate, '_ds', dsStr];
+    fileNameMat = [fileNameMat, '_ds', dsFsStr];
 end
 
 if filtFlag
-    CSCMAT = [CSCMAT, '_', filtType, fsStr];
+    fileNameMat = [fileNameMat, '_', filtType, filtFsStr];
 end
 
-CSCData.hdf5FileName = [CSCMAT, cscExt];
+fileNameMat = [fileNameMat, fileName(end-3:end), 'mat'];
 
-%% New CSCData Save File
+%% New Header Info
 
-fullCSCh5 = fullfile(CSCData.pathName, [CSCMAT, cscExt]);
-fullCSCMAT = fullfile(CSCData.pathName, [CSCMAT, 'mat']);
-
-Header.freq = CSCData.freq; % Temporary variable for the frequency of the output.
+Header = openNSx(nsxFilePath);
+Header = Header.MetaTags;
 
 %% Creating downsample object
 if dsFlag
-    dsFs = CSCData.freq / round(CSCData.freq / dsFs);
-    if CSCData.freq > dsFs
+    dsFs = Header.SamplingFreq / round(Header.SamplingFreq / dsFs);
+    if Header.SamplingFreq > dsFs
         N = 10;         % order
-        Fpass = dsFs/4; % Passband frequency
+        Fpass = dsFs/2; % Passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
-        h = fdesign.lowpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,CSCData.freq);
+        h = fdesign.lowpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.SamplingFreq);
+%         h = fdesign.lowpass('N,F3dB',N, Fpass,Header.SamplingFreq);
         Hd = design(h,'ellip');
     else
         fprintf('Cannot downsample to this frequency, %d.\nChoose a different value.\n', dsFs)
@@ -151,27 +165,30 @@ end % END IF
 if filtFlag
     if isequal(filtType, 'highpass')
         N = 10;         % order
-        Fpass = flitFs; % Passband frequency
+        Fpass = filtFs; % Passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
-        h = fdesign.highpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.freq);
-        Hf = design(h,'ellip');
+%         h = fdesign.highpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.SamplingFreq);
+        h = fdesign.highpass('N,F3dB',N, Fpass,Header.SamplingFreq);
+        Hf = design(h,'butter');
     elseif isequal(filtType, 'lowpass')
         N = 10;         % order
-        Fpass = flitFs; % Passband frequency
+        Fpass = filtFs; % Passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
-        h = fdesign.lowpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.freq);
-        Hf = design(h,'ellip');        
+%         h = fdesign.lowpass('N,Fp,Ap,Ast',N,Fpass,Apass,Astop,Header.SamplingFreq);
+        h = fdesign.lowpass('N,F3dB',N, Fpass,Header.SamplingFreq);
+        Hf = design(h,'butter');        
         
     elseif isequal(filtType, 'bandpass')
         N = 10;         % order
-        Flowpass = flitFs(1); % Lower passband frequency
-        Fhighpass = flitFs(2); % Higher passband frequency
+        Flowpass = filtFs(1); % Lower passband frequency
+        Fhighpass = filtFs(2); % Higher passband frequency
         Apass = 1;      % Passband ripple (dB)
         Astop = 80;     % Stopband attenuation (dB)
-        h = fdesign.bandpass('N,Fp1,Fp2,Ast1,Ap,Ast2',N,Flowpass,Fhighpass,Astop,Apass,Astop,Header.freq);
-        Hf = design(h,'ellip');      
+%         h = fdesign.bandpass('N,Fp1,Fp2,Ast1,Ap,Ast2',N,Flowpass,Fhighpass,Astop,Apass,Astop,Header.SamplingFreq);
+%         h = fdesign.lowpass('N,F3dB',N, Fpass,Header.SamplingFreq);
+%         Hf = design(h,'ellip');      
     else
         fprintf('There was an error _DEBUG_.\n')
         return
@@ -180,78 +197,86 @@ end % END IF
 
 
 %% Find usable memory size
-% Determining system memory to maximize data segments
-[userview, ~] = memory;
-maxBytes = userview.MaxPossibleArrayBytes;
-
-
-% Calculating maximum channel samples to load into memory
-segmentLength = maxBytes*0.4 / 8 / 512; % 8 bytes is the length of a double
-% segmentLength = 512*1024/512;
-dataLen = length(Header.timeStamps);
-
-segNum = floor(dataLen/segmentLength) + 1;
-segRemLen = rem(dataLen,segmentLength);
-
-dataSize = dataLen*512*8*16/1024/1024/1024;
+% % Determining system memory to maximize data segments
+% [userview, ~] = memory;
+% maxBytes = userview.MaxPossibleArrayBytes;
+% 
+% 
+% % Calculating maximum channel samples to load into memory
+% segmentLength = maxBytes*0.4 / 8 / 512; % 8 bytes is the length of a double
+% % segmentLength = 512*1024/512;
+% dataLen = length(Header.timeStamps);
+% 
+% segNum = floor(dataLen/segmentLength) + 1;
+% segRemLen = rem(dataLen,segmentLength);
+% 
+% dataSize = dataLen*512*8*16/1024/1024/1024;
 
 %% Downsample and Filter
-fprintf('\n********************\nSTARTING SAMPLE EXTRACTION\nFile output: %s\n\n', fullCSCMAT)
-fprintf('DOWNSAMPLE Parsing: %0.0f%% complete\nLoading %0.1f GB of data\n', 0, dataSize)
-pause(5)
+sizeFile = dir(nsxFilePath);
+sizeFile = sizeFile.bytes;
 
-if dsFlag
-    CSCData.timeStamps = CSCData.timeStamps(1:round(CSCData.freq/dsFs):end);
-end % END IF
+sizeChan = sizeFile/Header.ChannelCount;
 
-save(fullCSCMAT, 'CSCData');	% Saves data in .mat file
+fprintf('\n********************\nSTARTING SAMPLE EXTRACTION\nFile output: %s\n\n', fullfile(pathName,fileNameMat))
+fprintf('DOWNFILTER Parsing: %0.0f%% complete\nLoading %0.1f GB of data\n', 0, sizeFile/(1024^3))
+pause(1)
 
-maxChans = 16; % This may need to be changed to be non-hardcoded
+save(fullfile(pathName, fileNameMat), 'Header')
 
-for i = 1:maxChans   
+maxChans = 96; %Header.ChannelCount; % This may need to be changed to be non-hardcoded
+if(timeStart == 0)
+    timeStartSamp = 1; 
+else
+    timeStartSamp = ceil(Header.SamplingFreq*timeStart); 
+end
+
+if(timeSpan == -1)
+    timeSpanSamp = Header.Samples; 
+else
+    timeSpanSamp = ceil(timeSpan * Header.SamplingFreq + timeStartSamp); 
+end
+
+disp('Loading Data')
+loadTime = tic;
+nsxData = openNSx(nsxFilePath, 'read', ['c:1:', num2str(maxChans)], ['t:', num2str(timeStartSamp), ':', num2str(timeSpanSamp)];
+fprintf('Data Loaded: %f seconds\n', toc(loadTime))
+timeSpent = tic;
+for ii = 1:maxChans   
     
-    tempChanName = ['CSC',num2str(i)];
-    eval([tempChanName, ' = [];']);
-
-    % Creates new hdf5 file
-    h5create(fullCSCh5, ['/', tempChanName], [maxChans, dataLen*512]); % Create a h5 file because of 32-bit windows restrictions
-
+%     nsxData = openNSx(nsxFilePath, 'read', ['c:' num2str(ii)]);
+        
+    tempChan = double(nsxData.Data(ii,:));
     
-    for j = 1:segNum
-        
-        tempChanName = ['CSC',num2str(i)];
-        %         matObj = matfile(fullCSCMAT, 'Writable', true); matObj = matfile(fullCSCMAT);
-        
-        currDataSize = (dataLen*512*8*(i-1) + dataLen*512*8/segNum*(j)) / 1024/1024/1024;
-        clc; fprintf('DownFilter Parsing: %0.0f%% complete\nLoading %0.1f GB of data\n', currDataSize/dataSize*100, dataSize)
-        fprintf('Channel: %d\tSegment: %d\n',i,j);
-        
-        if j ~= segNum(end)
-            samples = [(j-1)*segmentLength + 1, (j-1)*segmentLength + segmentLength];
-            [tempChan] = h5read(fullfile(CSCData.pathName, CSCData.hdf5FileName), ['/', tempChanName], [1, samples(1)], [1,samples(1)-samples(2)]);
-        else
-            samples = [(j-1)*segmentLength + 1, (j-1)*segmentLength + segRemLen];
-            [tempChan] = h5read(fullfile(CSCData.pathName, CSCData.hdf5FileName), ['/', tempChanName], [1, samples(1)], [1,samples(1)-samples(2)]);
-        end % END IF
-        
-        if dsFlag
-            tempChan = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tempChan);
-            tempChan = tempChan(1:round(CSCData.freq/dsFs):end);
-        end
-        
-        if filtFlag
-            tempChan = filtfilt(Hf.sosMatrix,Hf.ScaleValues,tempChan);
-        end
-                
-        h5write(fullCSCMAT, ['/', tempChanName], tempChan, [1, (j-1)*segmentLength + 1], [1, size(tempChan,2)]);
-        clear(tempChanName)
-        clear('tempChan')
+    if filtFlag
+        filtTime = tic;
+        disp('Filter Start')
+        tempChan = filtfilt(Hf.sosMatrix,Hf.ScaleValues,tempChan);
+        filtTimeOut = toc(filtTime);
+        fprintf('Filter End: %f seconds\n', filtTimeOut)
+    end
+    
+    if dsFlag
+        dsTime = tic;
+        disp('DownSample Start')
+        tempChan = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tempChan);
+        tempChan = tempChan(1:round(Header.SamplingFreq/dsFs):end);
+        dsTimeOut = toc(dsTime);
+        fprintf('DownSample End: %f seconds\n', dsTimeOut)
+    end
+    
+    tempChanName = ['C', num2str(ii)];
+    
+    eval([tempChanName,' = tempChan;']);
+    save(fullfile(pathName, fileNameMat), tempChanName, '-append')
+    clear('tempChan')
 
-        
-    end % END FOR
+    clc; fprintf('DownFilter Parsing: %0.0f%% complete\nLoading %0.1f GB of data\n', (sizeChan*ii)/sizeFile*100, sizeFile/(1024^3))
+    fprintf('Channel: %d\n',ii);    
+    fprintf('Time spent: %f seconds\n', toc(timeSpent))
 end % END FOR
 
-fprintf('\n********************\nCOMPLETED DOWNSAMPLE AND FILTERING\nFile output: %s\n\n', fullCSCMAT)
+fprintf('\n********************\nCOMPLETED DOWNSAMPLE AND FILTERING\nFile output: %s\n\n',  fullfile(pathName,fileNameMat))
 
 
 

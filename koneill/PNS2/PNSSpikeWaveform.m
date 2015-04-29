@@ -95,11 +95,11 @@ elseif plotOption == 2
     
     % 	unitIdx = SpikeData.units == unit;
     unitIdx = ones(1, length(SpikeData.timeStamps{channel}));
-    
-    meanWave  = mean(SpikeData.samples{channel}(:,:), 2);
-    errorWave = std(SpikeData.samples{channel}(:,:), 0, 2);
+        errorWave = std(SpikeData.samples{channel}(:,:), 0, 2);
     errorWave = errorWave/sqrt(numel(SpikeData.samples)); % Standard error
     errorWave = 2*errorWave; % 2*standard error.
+    meanWave  = mean(SpikeData.samples{channel}(:,:), 2);
+
     
     x = 1:32;
     xx = [x, fliplr(x)];

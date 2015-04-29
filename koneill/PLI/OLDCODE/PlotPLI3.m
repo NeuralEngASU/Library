@@ -4,7 +4,7 @@ function [] = PlotPLI2(pathName, g, p, chanPairs, type, mapCol)
 
 if isempty(type); type = 'space-invader'; end % END IF
 
-PLI = p';
+PLI = p2';
 
 numChans = 2^nextpow2(max(chanPairs(:)));
 
@@ -18,7 +18,7 @@ colormap(mapCol);
 
 if strcmp(type, 'confusion')
     
-    imagesc(tmpPLI, [0, 0.15]);
+    imagesc(tmpPLI, [0, 0.7]);
     
 elseif strcmp(type, 'space-invader')
     %%
@@ -125,10 +125,10 @@ elseif strcmp(type, 'space-invader')
     set(cData, 'YTickLabel', [-1, 0, 1])
     set(cData, 'TickDirection', 'Out')
 %     set(cData, 'Label', 'PLI')
-    cData.Label.String = 'Significance';
+    cData.Label.String = 'PLI';
     
-    savefig(fullfile(pathName, sprintf('%s_Sig', g.subject)))
-    print(fullfile(pathName, sprintf('%s_Sig', g.subject)), '-dpng')
+%     savefig(fullfile(pathName, sprintf('%s_Sig', g.subject)))
+%     print(fullfile(pathName, sprintf('%s_Sig', g.subject)), '-dpng')
     
     
 end % END IF
