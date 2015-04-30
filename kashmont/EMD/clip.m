@@ -319,7 +319,8 @@ for n = 1:length(clpnum)
     %save(['D:\Kari\ECoG\Data\' ictal_state '\clips\longsamp\' patnum '.mat'],'data');
     %save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','-v7.3');
     %     save(['D:\Kari\ECoG\Data\PLI\' patnum '_PLIclip1.mat'],'data','header', '-v7.3');
-    save(['D:\data\human CNS\PLI_long_data\', patnum, '_', day{1}, '_long_form.mat'],'data','header','-v7.3');
+%     save(['D:\data\human CNS\PLI_long_data\', patnum, '_', day{1}, '_long_form.mat'],'data','header','-v7.3');
+    save(['E:\data\human CNS\PLI_long_data\', patnum, '_', day{1}, '_long_form.mat'],'data','header','-v7.3');
     
     %     figure;
     %     plot(data(50,:));
