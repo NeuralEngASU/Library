@@ -263,8 +263,12 @@ end
 gridMean = mean(p(:,idx),2);
 smoothP = zeros(size(p,1), sum(idx));
 
+idxIdx = find(idx==1);
+
 for ii = 1:sum(idx)
-    smoothP(:,ii) = smooth(p(:,ii));
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
 end % END FOR
 
 gridErr = std(smoothP, 0, 2);
@@ -354,9 +358,12 @@ for kk = 1:size(PLIList,2)
     % Calc Whole grid mean and std err
     smoothP = zeros(size(p,1), sum(idx));
     
+    idxIdx = find(idx==1);
+    
     for ii = 1:sum(idx)
-        %         smoothP(:,ii) = p(:,ii);
-        smoothP(:,ii) = smooth(p(:,ii));
+        tmpIdx = idxIdx(ii);
+        %         smoothP(:,ii) = p(:,tmpIdx);
+        smoothP(:,ii) = smooth(p(:,tmpIdx));
     end % END FOR
     
     gridErr = std(smoothP, 0, 2);
@@ -523,9 +530,12 @@ end
 % Calc Whole grid mean and std err
 smoothP = zeros(size(p,1), sum(idx));
 
+idxIdx = find(idx==1);
+
 for ii = 1:sum(idx)
-    %         smoothP(:,ii) = p(:,ii);
-    smoothP(:,ii) = smooth(p(:,ii));
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
 end % END FOR
 
 gridErr = std(smoothP, 0, 2);
