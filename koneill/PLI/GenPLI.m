@@ -137,7 +137,7 @@ for cp = 1:pairNum
             
             % calculate PLI and R
             if rawPhiFlag
-                tmpDeltaPhi = nan(winNum, (winSize*Fs), surrNum+1);
+%                 tmpDeltaPhi = nan(winNum, (winSize*Fs), surrNum+1);
                 [tmpp(:,ss),tmpr(:,ss), tmpDeltaPhi(:,:,ss)]=pli(raw1, raw2s);
             else
                 [tmpp(:,ss),tmpr(:,ss),~]=pli(raw1, raw2s);
