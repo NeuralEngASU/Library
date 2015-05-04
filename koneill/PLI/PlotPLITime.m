@@ -609,8 +609,8 @@ legend(num2str(f(1:5)), 'Location', 'North')
 
 % Votlage
 a4 = subplot(4,1,4);
-% desiredRef = ref;
-desiredRef = biPolarRef;
+desiredRef = ref;
+% desiredRef = biPolarRef;
 
 plot(linspace(0,timeMax/60,sizeMax), data(desiredRef, 1:sizeMax));
 title(sprintf('Raw waveform, channel: %d-%d', desiredRef*2-1, desiredRef*2))
