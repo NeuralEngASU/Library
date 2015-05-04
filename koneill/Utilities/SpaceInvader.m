@@ -70,14 +70,14 @@ for kk = 1:length(desiredGrid(:))
     
     colsFix = linspace(0+border,1-border,size(layout,2)+1);
     clf;
-    figure(1);
+    figure;
     
     for ii = 1:length(chanLLIdx)
         
         chanIdx = layout(chanLLIdx(ii));
         [offx, offy] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx));
         
-        if isempty(intersect(chanIdx, g.badchan))
+        if isempty(intersect(chanIdx, gridDef.badchan))
             
             for jj = 1:length(chanLLIdx)
                 
@@ -88,11 +88,11 @@ for kk = 1:length(desiredGrid(:))
                 xSubPos = [rowsFix(1,xpos), rowsFix(1,xpos+1), rowsFix(1,xpos+1), rowsFix(1,xpos)  ] + offx;
                 ySubPos = [colsFix(1,ypos), colsFix(1,ypos)  , colsFix(1,ypos+1), colsFix(1,ypos+1)] + offy;
                 
-                colorPatch = mapCol(floor(tmpPLI(chanIdx,chanIdx2) * 127+1),:);
+                colorPatch = mapCol(floor(tmpPLI(chanIdx,chanIdx2) * 63+64),:);
                 
                 pData  = patch( xSubPos, ySubPos, colorPatch);
                 
-                if  chanIdx == chanIdx2 || ~isempty(intersect(chanIdx2, g.badchan))
+                if  chanIdx == chanIdx2 || ~isempty(intersect(chanIdx2, gridDef.badchan))
                     set(pData, 'FaceColor', [0,0,0])
                 end % END IF
                 
@@ -132,7 +132,7 @@ for kk = 1:length(desiredGrid(:))
         
     end % END FOR
     
-    title(sprintf('%s: PLI', g.subject))
+    title(sprintf('%s: PLI', gridDef.subject))
     
     xlim([0.9,size(layout,1)+1.1])
     ylim([0.9,size(layout,2)+1.1])
@@ -143,12 +143,12 @@ for kk = 1:length(desiredGrid(:))
     set(gca, 'XTickLabel', [])
     set(gca, 'YTick', [])
     set(gca, 'YTickLabel', [])
-    
+    colormap(jet)
     cData = colorbar('Location', 'East');
     
     set(cData, 'YAxisLocation','right')
     set(cData, 'YTick', [0, 0.25,0.5,0.75, 1])
-    set(cData, 'YTickLabel', [0, 0.25,0.5,0.75, 1])
+    set(cData, 'YTickLabel', [-1, -0.5,0,0.5, 1])
     set(cData, 'TickDirection', 'Out')
     %     set(cData, 'Label', 'PLI')
     cData.Label.String = plotData.cbarlabel;
