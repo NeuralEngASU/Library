@@ -18,6 +18,8 @@ PLOTDATA = struct('border', 0.05,...
     'cbarticklabel', [0:0.25:1],...
     'cbartickdir', 'none');
 DESIREDGRID = 1; % Desired grid to plot
+MINVAL = 0;
+MAXVAL = 1;
 
 MAPCOL = jet(128);
 
@@ -36,14 +38,40 @@ chanPairs = CHANPAIRS;
 plotData = PLOTDATA;
 desiredGrid = DESIREDGRID;
 mapCol = MAPCOL;
+minVal = MINVAL;
+maxVal = MAXVAL;
 
 clear LINEARFLAG CHANPAIRS PLOTDATA DESIREDGRID MAPCOL
 
 % If chanPairs was not given
-% if linearFlag && isempty(chanPairs) && ~isfield(grifDef.chanPairs)
-%     chanPairs = nchoosek(1:gridDef.numChan,2);
-% end % END IF
+if linearFlag && isempty(chanPairs) && ~isfield(gridDef, 'chanPairs')
+    chanPairs = nchoosek(1:gridDef.numChan,2);
+end % END IF
+%%
 
+minVal = min(data(:));
+maxVal = max(data(:));
+
+data = (data+minVal);
+data = data./(max(data(:)));
+
+% data = data(:);
+
+if linearFlag
+    
+    data = data(:);
+    
+    numChans = gridDef.numChan;
+    
+    tmpData = ones(numChans,numChans) * -1;
+    tmpData(sub2ind([numChans,numChans], chanPairs(:,1), chanPairs(:,2))) = data;
+    tmpData(sub2ind([numChans,numChans], chanPairs(:,2), chanPairs(:,1))) = data;
+    tmpData(logical(eye(numChans))) = zeros(1,numChans);
+    
+    data = tmpData;
+    clear tmpData
+    
+end % END IF linearFlag
 
 %% Make Plot
 
@@ -77,7 +105,7 @@ for kk = 1:length(desiredGrid(:))
         chanIdx = layout(chanLLIdx(ii));
         [offx, offy] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx));
         
-        if isempty(intersect(chanIdx, gridDef.badchan))
+        if isempty(intersect(chanIdx, gridDef.badChan))
             
             for jj = 1:length(chanLLIdx)
                 
@@ -88,11 +116,11 @@ for kk = 1:length(desiredGrid(:))
                 xSubPos = [rowsFix(1,xpos), rowsFix(1,xpos+1), rowsFix(1,xpos+1), rowsFix(1,xpos)  ] + offx;
                 ySubPos = [colsFix(1,ypos), colsFix(1,ypos)  , colsFix(1,ypos+1), colsFix(1,ypos+1)] + offy;
                 
-                colorPatch = mapCol(floor(tmpPLI(chanIdx,chanIdx2) * 63+64),:);
+                colorPatch = mapCol(floor(data(chanIdx,chanIdx2) * 127+1),:);
                 
                 pData  = patch( xSubPos, ySubPos, colorPatch);
                 
-                if  chanIdx == chanIdx2 || ~isempty(intersect(chanIdx2, gridDef.badchan))
+                if  chanIdx == chanIdx2 || ~isempty(intersect(chanIdx2, gridDef.badChan))
                     set(pData, 'FaceColor', [0,0,0])
                 end % END IF
                 
@@ -132,7 +160,7 @@ for kk = 1:length(desiredGrid(:))
         
     end % END FOR
     
-    title(sprintf('%s: PLI', gridDef.subject))
+    title(sprintf('%s', gridDef.subject))
     
     xlim([0.9,size(layout,1)+1.1])
     ylim([0.9,size(layout,2)+1.1])
@@ -147,8 +175,8 @@ for kk = 1:length(desiredGrid(:))
     cData = colorbar('Location', 'East');
     
     set(cData, 'YAxisLocation','right')
-    set(cData, 'YTick', [0, 0.25,0.5,0.75, 1])
-    set(cData, 'YTickLabel', [-1, -0.5,0,0.5, 1])
+    set(cData, 'YTick', plotData.cbartick)
+    set(cData, 'YTickLabel', plotData.cbarticklabel)
     set(cData, 'TickDirection', 'Out')
     %     set(cData, 'Label', 'PLI')
     cData.Label.String = plotData.cbarlabel;
