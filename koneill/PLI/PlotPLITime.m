@@ -141,31 +141,31 @@ end % END FOR size p
 
 %% 8x8 Grid on Self Mean
 
-PLIList{1} = {'E:\data\PLI\EMDData\2012PP05NonSz5_DN.mat_PLI_winSize1.mat'};
-PLIList{2} = {'E:\data\PLI\EMDData\2012PP05Sz7_DN.mat_PLI_winSize1.mat'};
-PLIList{3} = {'E:\data\PLI\EMDData\2014PP01NonSz1_DN.mat_PLI_winSize1.mat'};
-PLIList{4} = {'E:\data\PLI\EMDData\2014PP01Sz1_DN.mat_PLI_winSize1.mat'};
-PLIList{5} = {'E:\data\PLI\EMDData\2014PP01NonSz7_DN.mat_PLI_winSize1.mat'};
-PLIList{6} = {'E:\data\PLI\EMDData\2014PP01Sz7_DN.mat_PLI_winSize1.mat'};
+% PLIList{1} = {'E:\data\PLI\EMDData\2012PP05NonSz5_DN.mat_PLI_winSize1.mat'};
+% PLIList{2} = {'E:\data\PLI\EMDData\2012PP05Sz7_DN.mat_PLI_winSize1.mat'};
+% PLIList{3} = {'E:\data\PLI\EMDData\2014PP01NonSz1_DN.mat_PLI_winSize1.mat'};
+% PLIList{4} = {'E:\data\PLI\EMDData\2014PP01Sz1_DN.mat_PLI_winSize1.mat'};
+% PLIList{5} = {'E:\data\PLI\EMDData\2014PP01NonSz7_DN.mat_PLI_winSize1.mat'};
+% PLIList{6} = {'E:\data\PLI\EMDData\2014PP01Sz7_DN.mat_PLI_winSize1.mat'};
 PLIList{7} = {'E:\data\PLI\EMDData\2014PP02NonSz4_DN.mat_PLI_winSize1.mat'};
 PLIList{8} = {'E:\data\PLI\EMDData\2014PP02Sz4_DN.mat_PLI_winSize1.mat'};
-PLIList{9} = {'E:\data\PLI\EMDData\2014PP02NonSz4_DN.mat_PLI_winSize1.mat'};
-PLIList{10}= {'E:\data\PLI\EMDData\2014PP07Sz4_DN.mat_PLI_winSize1.mat'};
+% PLIList{9} = {'E:\data\PLI\EMDData\2014PP02NonSz4_DN.mat_PLI_winSize1.mat'};
+% PLIList{10}= {'E:\data\PLI\EMDData\2014PP07Sz4_DN.mat_PLI_winSize1.mat'};
 
-EMDList{1} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2012PP05NonSz5_DN.mat'};
-EMDList{2} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2012PP05Sz7_DN.mat'};
-EMDList{3} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz1_DN.mat'};
-EMDList{4} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz1_DN.mat'};
-EMDList{5} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz7_DN.mat'};
-EMDList{6} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz7_DN.mat'};
+% EMDList{1} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2012PP05NonSz5_DN.mat'};
+% EMDList{2} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2012PP05Sz7_DN.mat'};
+% EMDList{3} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz1_DN.mat'};
+% EMDList{4} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz1_DN.mat'};
+% EMDList{5} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz7_DN.mat'};
+% EMDList{6} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz7_DN.mat'};
 EMDList{7} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP02NonSz4_DN.mat'};
 EMDList{8} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP02Sz4_DN.mat'};
-EMDList{9} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP07NonSz4_DN.mat'};
-EMDList{10}= {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP07Sz4_DN.mat'};
+% EMDList{9} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP07NonSz4_DN.mat'};
+% EMDList{10}= {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP07Sz4_DN.mat'};
 
 names = {'2012PP05Sz7_NonSz5', '2014PP01Sz1_NonSz1', '2014PP01Sz7_NonSz7', '2014PP02NonSz4_NonSz4','2014PP07NonSz4_NonSz4'};
 ref = [9, 9, 82, 82, 82, 82, 5, 5, 43, 43];
-for kk = 1:size(PLIList,2)
+for kk = 7:8%1:size(PLIList,2)
     
     if ~~mod(kk,2)
         figure;
@@ -187,6 +187,7 @@ for kk = 1:size(PLIList,2)
     
     for ii = 1:sum(idx)
         smoothP(:,ii) = smooth(p(:,ii));
+%         smoothP(:,ii) = smooth(r(:,ii));
     end % END FOR
     
     gridErr = std(smoothP, 0, 2);
@@ -515,9 +516,9 @@ imagesc(gridMat)
 %% Plot Long Form Data
 
 ref = [5];
-biPolarRef = (ref+1)/2;
+% biPolarRef = (ref+1)/2;
 
-chansPlot = [1:32];
+chansPlot = [1:64];
 
 % Find Idx
 desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
@@ -535,7 +536,8 @@ idxIdx = find(idx==1);
 for ii = 1:sum(idx)
     tmpIdx = idxIdx(ii);
     %         smoothP(:,ii) = p(:,tmpIdx);
-    smoothP(:,ii) = smooth(p(:,tmpIdx));
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothP(:,ii) = smooth(r(:,tmpIdx));
 end % END FOR
 
 gridErr = std(smoothP, 0, 2);
@@ -567,13 +569,16 @@ plot(x, repmat(meanBG + stdBG, 1,size(p,1)), 'k')
 plot(x, repmat(meanBG, 1,size(p,1)), 'r')
 plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
 hold off
-ylim([0,1])
+% ylim([0,1])
+ylim([0.9,1])
 xlim([0,x(end)])
 xlabel('Time, minutes')
-ylabel('PLI')
-legend({'Mean, NonSz', '1 std of mean, NonSz'}, 'location', 'North')
+% ylabel('PLI')
+ylabel('R')
+legend({'Mean, NonSz', '1 std of mean, NonSz'}, 'location', 'south')
 
-title(strrep(sprintf('Long Form Data: 2014PP02 BiPolar'), '_', '\_'))
+title(strrep(sprintf('Long Form Data: 2014PP02 R 10*log10 clim[-10.3, -10.1]'), '_', '\_'))
+% title(strrep(sprintf('Long Form Data: 2014PP02 PLI 10*log10'), '_', '\_'))
 
 set(pData, 'FaceColor', 'k')
 set(pData, 'EdgeColor', 'none')
@@ -589,10 +594,14 @@ params.Fs = 60;
 [S,t,f]=mtspecgramc(gridMean2,[1,0.1],params);
 colormap(jet)
 
-imagesc(t,f,S')
+% imagesc(t,f,S', [0.09, 0.1])
+imagesc(t,f,10*log10(S'), [-10.3, -10.1])
+% imagesc(t,f,10*log10(S'))
+% imagesc(t,f,S')
 
 xlabel('Time, minutes')
-ylabel('PLI Frequency')
+% ylabel('PLI Frequency')
+ylabel('R Frequency')
 set(gca, 'XTick', unique([0:10:x(end), x(end)]))
 set(gca,'YDir','normal');
 xlim([0,x(end)])
@@ -601,12 +610,15 @@ xlim([0,x(end)])
 colormap(jet)
 a3 = subplot(4,1,3);
 
-plot(linspace(0,timeMax/60,size(S,1)), S(:,1), 'r')
+tmpS = 10*log10(S);
+% tmpS = S;
+
+plot(linspace(0,timeMax/60,size(S,1)), tmpS(:,1), 'r')
 hold on
-plot(linspace(0,timeMax/60,size(S,1)),S(:,2),'g')
-plot(linspace(0,timeMax/60,size(S,1)),S(:,3),'c')
-plot(linspace(0,timeMax/60,size(S,1)),S(:,4),'b')
-plot(linspace(0,timeMax/60,size(S,1)),S(:,5),'m')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,2),'g')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,3),'c')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,4),'b')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,5),'m')
 hold off
 
 title('Spectrum Power')
@@ -615,7 +627,7 @@ ylabel('Power')
 set(gca, 'XTick', unique([0:10:x(end), x(end)]))
 xlim([0,x(end)])
 
-legend(num2str(f(1:5)), 'Location', 'North')
+legend(num2str(f(1:5)), 'Location', 'best')
 
 % Votlage
 a4 = subplot(4,1,4);
@@ -623,7 +635,8 @@ desiredRef = ref;
 % desiredRef = biPolarRef;
 
 plot(linspace(0,timeMax/60,sizeMax), data(desiredRef, 1:sizeMax));
-title(sprintf('Raw waveform, channel: %d-%d', desiredRef*2-1, desiredRef*2))
+% title(sprintf('Raw waveform, channel: %d-%d', desiredRef*2-1, desiredRef*2))
+title(sprintf('Raw waveform, channel: %d', desiredRef))
 xlabel('Time, minutes')
 ylabel('Voltage, uV')
 set(gca, 'XTick', unique([0:10:x(end), x(end)]))
