@@ -51,13 +51,14 @@ load(filePath, '-mat');
 
 % Biploar
 %if biPolarFlag
-    data2 = data(1:2:end,:) - data(2:2:end,:);
-    data = data2;
-    clear data2
+%     data2 = data(1:2:end,:) - data(2:2:end,:);
+%     data = data2;
+%     clear data2
 % end % END IF
 
 % Find the number of channels
 numChans = size(data,1);
+numChans
 
 % Set up channel parings
 chanPairNums = nchoosek(sort(unique(1:numChans),'ascend'),2);
@@ -144,7 +145,7 @@ for cp = 1:pairNum
             end % END IF rawPhiFlag
         
         end
-    else
+    else % No surrogates
         
         %%
         tmpp = nan(winNum, 1);

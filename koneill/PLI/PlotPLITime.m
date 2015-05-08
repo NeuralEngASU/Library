@@ -537,7 +537,7 @@ for ii = 1:sum(idx)
     tmpIdx = idxIdx(ii);
     %         smoothP(:,ii) = p(:,tmpIdx);
 %     smoothP(:,ii) = smooth(p(:,tmpIdx));
-    smoothP(:,ii) = smooth(r(:,tmpIdx));
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
 end % END FOR
 
 gridErr = std(smoothP, 0, 2);
@@ -563,22 +563,28 @@ a1 = subplot(4,1,1);
 hold on
 plot([0,0], [0,0], 'r') % Legend Stuff
 plot([0,0], [0,0], 'k') % Legned stuff
+
+[~,~,minutes] = Time2Samp(header.SzOffset, 500); % Clinical onset
+for tt = 1:size(minutes,1)
+    plot([minutes(tt),minutes(tt)], [0, 1], 'r')
+end % END FOR
+
 pData = patch(xx, patchdata, 1);
 lData = plot(x, gridMean2, 'b', 'linewidth', 1);
 plot(x, repmat(meanBG + stdBG, 1,size(p,1)), 'k')
 plot(x, repmat(meanBG, 1,size(p,1)), 'r')
 plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
 hold off
-% ylim([0,1])
-ylim([0.9,1])
+ylim([0,1])
+% ylim([0.9,1])
 xlim([0,x(end)])
 xlabel('Time, minutes')
-% ylabel('PLI')
-ylabel('R')
+ylabel('PLI')
+% ylabel('R')
 legend({'Mean, NonSz', '1 std of mean, NonSz'}, 'location', 'south')
 
-title(strrep(sprintf('Long Form Data: 2014PP02 R 10*log10 clim[-10.3, -10.1]'), '_', '\_'))
-% title(strrep(sprintf('Long Form Data: 2014PP02 PLI 10*log10'), '_', '\_'))
+% title(strrep(sprintf('Long Form Data: 2014PP02 R 10*log10 clim[-10.3, -10.1]'), '_', '\_'))
+title(strrep(sprintf('Long Form Data: 2014PP02 PLI'), '_', '\_'))
 
 set(pData, 'FaceColor', 'k')
 set(pData, 'EdgeColor', 'none')
@@ -595,9 +601,9 @@ params.Fs = 60;
 colormap(jet)
 
 % imagesc(t,f,S', [0.09, 0.1])
-imagesc(t,f,10*log10(S'), [-10.3, -10.1])
+% imagesc(t,f,10*log10(S'), [-10.3, -10.1])
 % imagesc(t,f,10*log10(S'))
-% imagesc(t,f,S')
+imagesc(t,f,S')
 
 xlabel('Time, minutes')
 % ylabel('PLI Frequency')
@@ -610,8 +616,8 @@ xlim([0,x(end)])
 colormap(jet)
 a3 = subplot(4,1,3);
 
-tmpS = 10*log10(S);
-% tmpS = S;
+% tmpS = 10*log10(S);
+tmpS = S;
 
 plot(linspace(0,timeMax/60,size(S,1)), tmpS(:,1), 'r')
 hold on
@@ -643,3 +649,117 @@ set(gca, 'XTick', unique([0:10:x(end), x(end)]))
 xlim([0,x(end)])
 
 linkaxes([a1,a2,a3, a4], 'x')
+
+%%
+
+idxChan = zeros(size(chanPairNums,1), 1);
+
+chan1 = 5;
+chan2 = 13;
+
+idxChan = idxChan | ((chanPairNums(:,1) == chan1) & (chanPairNums(:,2) == chan2));
+
+idxChanIdx = find(idxChan);
+
+% idxChanIdx = 1;
+
+% plotData = smoothP(:,idxIdx(idxChanIdx));
+plotData = smoothR(:,idxIdx(idxChanIdx));
+% plotData = smoothP(:,idxIdx(idxChanIdx)) .* abs(smoothR(:,idxIdx(idxChanIdx))-1);
+% pliMean.*(abs(rMean-1));
+
+figure;
+plot(x,plotData)
+title(sprintf('%d-%d', chanPairNums(idxChanIdx,1), chanPairNums(idxChanIdx,2)))
+
+%% Smooth PLI Signifigantly differnet from mean
+
+chansPlot = [1:64];
+
+% Find Idx
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+smoothP = zeros(size(p,1), sum(idx));
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
+end % END FOR
+
+gridErr = std(smoothP, 0, 2);
+gridErr = gridErr/sqrt(sum(idx)); % Standard error
+gridErr = 2*gridErr; % 2*standard error.
+
+
+pliMean = mean(smoothP,2);
+rMean = mean(smoothR,2);
+
+stdErr = std(pliMean);
+stdErr = stdErr / sqrt(length(pliMean));
+stdErr = 10.3*stdErr;
+
+
+pIdx = find(pliMean >= stdErr);
+
+%% PLI-R Mean
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
+end % END FOR
+
+
+pliMean = mean(smoothP,2);
+rMean = mean(smoothR,2);
+
+combMean = pliMean.*(abs(rMean-1));
+
+
+
+
+figure;
+plot(x, combMean)
+hold on
+[samp, hourss, minutes] = Time2Samp(header.SzOffset, 500);
+
+for ii = 1:size(minutes,1)
+    
+    plot([minutes(ii),minutes(ii)], [0, 1], 'r')
+    
+end % END FOR
+
+xlim([min(x), max(x)])
+ylim([0, max(combMean)*1.1])
+
+%% ARIMA
+
+Mdl = arima(1,0,1);
+
+y0 = combMean(1:1500); % presample data
+
+[EstMdl,EstParamCov] = estimate(Mdl,combMean(1501:end),'Y0',y0);
+[vS,yS] = infer(EstMdl,combMean(1501:end),'Y0',y0);
+
+subplot(2,1,1)
+plot(vS)
+subplot(2,1,2)
+plot(yS)
+
+
+% plot(res)
+
+

@@ -127,7 +127,7 @@ for n = 1:length(clpnum)
     
     %load seizure onset times from excel file
     %     [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
-    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L4');
+    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L7');
     %
     %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
     %         new_hr = str2double(clonset{n}(1:2)) + 24;
@@ -275,7 +275,7 @@ for n = 1:length(clpnum)
     % %Kevin
     disp('PLI info')
     PLIoffset = [];
-    [~,sztimes] = xlsread(xlfile,'PLItest','P9:P10');
+    [~,sztimes] = xlsread(xlfile,'PLItest','P3:P7');
     
     for s = 1:size(sztimes,1)
         
