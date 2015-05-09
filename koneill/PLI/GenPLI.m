@@ -2,11 +2,12 @@ function [filePathOut] = GenPLI(filePath, pathOutName, varargin)
 
 %% Parse Input
 % Defaults
-WINSIZE = 1;    % Seconds
-FS = 500;       % Sampling rate of file
-SURRFLAG = 0;   % Surrogate flag, if true, will compute surrogate data
-SURRNUM = 100;  % Number of surrogate calculations
-RAWPHIFLAG = 0; % Raw deltaPhi flag, if true, save raw deltaPhi data
+WINSIZE = 1;     % Seconds
+FS = 500;        % Sampling rate of file
+SURRFLAG = 0;    % Surrogate flag, if true, will compute surrogate data
+SURRNUM = 100;   % Number of surrogate calculations
+RAWPHIFLAG = 0;  % Raw deltaPhi flag, if true, save raw deltaPhi data
+BIPOLARFLAG = 0; % BiPolar Flag, if true, calculate the bipolar PLI
 
 % parse varargin
 for ii = 1:2:length(varargin)
@@ -23,6 +24,7 @@ Fs = FS;
 surrFlag = SURRFLAG;
 surrNum = SURRNUM;
 rawPhiFlag = RAWPHIFLAG;
+biPolarFlag = BIPOLARFLAG;
 
 % Parse file strings
 pathInExpr = '(.+)?\\';
@@ -50,15 +52,14 @@ fprintf('Data Size: %f MB\n',sizeFile)
 load(filePath, '-mat');
 
 % Biploar
-%if biPolarFlag
-%     data2 = data(1:2:end,:) - data(2:2:end,:);
-%     data = data2;
-%     clear data2
-% end % END IF
+if biPolarFlag
+    data2 = data(1:2:end,:) - data(2:2:end,:);
+    data = data2;
+    clear data2
+end % END IF
 
 % Find the number of channels
 numChans = size(data,1);
-numChans
 
 % Set up channel parings
 chanPairNums = nchoosek(sort(unique(1:numChans),'ascend'),2);
@@ -75,6 +76,8 @@ rawWin = permute(reshape(permute(data(:,1:winNum*winSize*Fs)', [1,3,2]), (winSiz
 deltaPhi = 0;
 smp = 0;
 
+
+
 % initialize variables
 if surrFlag
     % Set up PLI and R variables
@@ -90,7 +93,18 @@ if surrFlag
     
 else
     pli = zeros(winNum, pairNum, 1);
+    
+    % stats
     r   = zeros(winNum, pairNum, 1);
+    circMean = zeros(winNum, pairNum, 3); % circular mean, upper bound, lower bound
+    circVar  = zeros(winNum, pairNum, 1); % circular variance
+    vMParams = zeros(winNum, pairNum, 2); % thetahat, kappa
+    vMScale  = zeors(winNum, pairNum, 1); % Scaling params for vM (transfers the units to [counts])
+    MSE      = zeros(winNum, pairNum, 1); % Mean squared Error
+    vMCorr   = zeros(winNum, pairNum, 1); % Correlation coefficiant between von Mises and hist(delaPhi)
+    circStd  = zeros(winNum, pairNum, 2); % angular and circular std
+    circSkew = zeros(winNum, pairNum, 2); % Pewsey and Fischer Skewness
+    circKurt = zeros(winNum, pairnum, 2); % Pewsey and Fischer kurtosis
     
     if rawPhiFlag
         deltaPhi = zeros(winNum, pairNum, floor(winSize*Fs), 1);
@@ -155,14 +169,27 @@ for cp = 1:pairNum
             tmpDeltaPhi = nan(winNum, 1,(winSize*Fs));
             [tmpp(:,1),tmpr(:,1), tmpDeltaPhi(:,1,:)] = pli2(raw1, raw2);
         else
-            [tmpp(:,1),tmpr(:,1),~]=pli2(raw1, raw2);
+            [tmpp(:,1),tmpr(:,1),tmpDeltaPhi(:,1,:)]=pli2(raw1, raw2);
         end % END IF rawPhiFlag
         
+        [tmpCircMean, tmpCircVar, tmpvMParams, tmpvMScale, tmpMSE ,tmpvMCorr, tmpCircStd, tmpCircSkew, tmpCircKurt] = CircStats(squeeze(tmpDeltaPhi)');
         %%
     end % END IF surrFlag
     
     p(:,cp,:) = tmpp;
     r(:,cp,:) = tmpr;
+    
+    circMean(:,cp,:) = tmpCircMean;
+    circVar(:,cp,:)  = tmpCircVar;
+    vMParams(:,cp,:) = tmpvMParams;
+    vMScale(:,cp,:)  = tmpvMScale;
+    MSE(:,cp,:)      = tmpMSE;
+    vMCorr(:,cp,:)   = tmpvMCorr;
+    circStd(:,cp,:)  = tmpCircStd;
+    circSkew(:,cp,:) = tmpCircSkew;
+    circKurt(:,cp,:) = tmpCircKurt;
+    
+    
     
     if rawPhiFlag
         deltaPhi(:,cp,:,:) = tmpDeltaPhi;
