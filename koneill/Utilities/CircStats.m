@@ -1,5 +1,5 @@
 % Extension of the CircStat package
-function [circMean, circVar, vMParams, vMScale, RMSE ,vMCorr, circStd, circSkew, circKurt] = CircStats(tmpDeltaPhi)
+function [circMean, circMed, circVar, vMParams, vMScale, RMSE ,vMCorr, vMR2, circStd, circSkew, circKurt] = CircStats(tmpDeltaPhi)
 
 binEdge = [-pi:pi/100:pi];
 

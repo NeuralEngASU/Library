@@ -8,6 +8,7 @@ SURRFLAG = 0;    % Surrogate flag, if true, will compute surrogate data
 SURRNUM = 100;   % Number of surrogate calculations
 RAWPHIFLAG = 0;  % Raw deltaPhi flag, if true, save raw deltaPhi data
 BIPOLARFLAG = 0; % BiPolar Flag, if true, calculate the bipolar PLI
+STATSFLAG = 0;   % Stats Flag. If true output the statistics variables
 
 % parse varargin
 for ii = 1:2:length(varargin)
@@ -25,6 +26,7 @@ surrFlag = SURRFLAG;
 surrNum = SURRNUM;
 rawPhiFlag = RAWPHIFLAG;
 biPolarFlag = BIPOLARFLAG;
+statsFlag = STATSFLAG;
 
 % Parse file strings
 pathInExpr = '(.+)?\\';
@@ -96,15 +98,20 @@ else
     
     % stats
     r   = zeros(winNum, pairNum, 1);
-    circMean = zeros(winNum, pairNum, 3); % circular mean, upper bound, lower bound
-    circVar  = zeros(winNum, pairNum, 1); % circular variance
-    vMParams = zeros(winNum, pairNum, 2); % thetahat, kappa
-    vMScale  = zeors(winNum, pairNum, 1); % Scaling params for vM (transfers the units to [counts])
-    MSE      = zeros(winNum, pairNum, 1); % Mean squared Error
-    vMCorr   = zeros(winNum, pairNum, 1); % Correlation coefficiant between von Mises and hist(delaPhi)
-    circStd  = zeros(winNum, pairNum, 2); % angular and circular std
-    circSkew = zeros(winNum, pairNum, 2); % Pewsey and Fischer Skewness
-    circKurt = zeros(winNum, pairnum, 2); % Pewsey and Fischer kurtosis
+    
+    if statsFlag
+        circMean = zeros(winNum, pairNum, 3); % circular mean, upper bound, lower bound
+        circMed  = zeros(winNum, pairNum, 1); % Cirular median
+        circVar  = zeros(winNum, pairNum, 1); % circular variance
+        vMParams = zeros(winNum, pairNum, 2); % thetahat, kappa
+        vMScale  = zeors(winNum, pairNum, 1); % Scaling params for vM (transfers the units to [counts])
+        RMSE     = zeros(winNum, pairNum, 1); % Mean squared Error
+        vMCorr   = zeros(winNum, pairNum, 2); % Circular and Angular Correlation coefficiant between von Mises and hist(delaPhi)
+        vMR2     = zeros(winNum, pairNum, 1); % R-squared value
+        circStd  = zeros(winNum, pairNum, 2); % angular and circular std
+        circSkew = zeros(winNum, pairNum, 2); % Pewsey and Fischer Skewness
+        circKurt = zeros(winNum, pairnum, 2); % Pewsey and Fischer kurtosis
+    end % END IF statsFlag
     
     if rawPhiFlag
         deltaPhi = zeros(winNum, pairNum, floor(winSize*Fs), 1);
@@ -172,23 +179,30 @@ for cp = 1:pairNum
             [tmpp(:,1),tmpr(:,1),tmpDeltaPhi(:,1,:)]=pli2(raw1, raw2);
         end % END IF rawPhiFlag
         
-        [tmpCircMean, tmpCircVar, tmpvMParams, tmpvMScale, tmpMSE ,tmpvMCorr, tmpCircStd, tmpCircSkew, tmpCircKurt] = CircStats(squeeze(tmpDeltaPhi)');
-        %%
+        if statsFlag
+            [tmpCircMean, tmpCircMed, tmpCircVar, tmpvMParams,...
+             tmpvMScale, tmpRMSE , tmpvMCorr, tmpvMR2, ...
+             tmpCircStd,tmpCircSkew, tmpCircKurt] = CircStats(squeeze(tmpDeltaPhi)');
+        end % END IF statsFlag   
+     %%
     end % END IF surrFlag
     
     p(:,cp,:) = tmpp;
     r(:,cp,:) = tmpr;
     
-    circMean(:,cp,:) = tmpCircMean;
-    circVar(:,cp,:)  = tmpCircVar;
-    vMParams(:,cp,:) = tmpvMParams;
-    vMScale(:,cp,:)  = tmpvMScale;
-    MSE(:,cp,:)      = tmpMSE;
-    vMCorr(:,cp,:)   = tmpvMCorr;
-    circStd(:,cp,:)  = tmpCircStd;
-    circSkew(:,cp,:) = tmpCircSkew;
-    circKurt(:,cp,:) = tmpCircKurt;
-    
+    if statsFlag
+        circMean(:,cp,:) = tmpCircMean;
+        circMed(:,cp,:)  = tmpCircMed;
+        circVar(:,cp,:)  = tmpCircVar;
+        vMParams(:,cp,:) = tmpvMParams;
+        vMScale(:,cp,:)  = tmpvMScale;
+        RMSE(:,cp,:)     = tmpRMSE;
+        vMCorr(:,cp,:)   = tmpvMCorr;
+        vMR2(:,cp,:)     = tmpvMR2;
+        circStd(:,cp,:)  = tmpCircStd;
+        circSkew(:,cp,:) = tmpCircSkew;
+        circKurt(:,cp,:) = tmpCircKurt;
+    end % END IF statsFlag
     
     
     if rawPhiFlag
@@ -214,5 +228,12 @@ end % END FOR
 fprintf('Saving Data to: %s\n', filePathOut)
 % save results
 save(filePathOut,'p','r','chanPairNums','smp', 'Header', 'deltaPhi', '-v7.3');
+
+if statsFlag
+    save(filaPathOut, 'circMean', 'circMed', 'circVar','vMParams',...
+                      'vMScale','RMSE','vMCorr','vMR2','circStd',...
+                      'circSkew','circKurt', '-append')
+end % END IF statsFlag
+
 end % END FUNCTION
 % EOF
