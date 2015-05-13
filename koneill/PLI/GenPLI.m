@@ -40,9 +40,23 @@ fileName = fileName{1}{1};
 sizeFile = dir(filePath);
 sizeFile = round(sizeFile.bytes / 1024^2, 1);
 
+filePathOut = fullfile(pathOutName, fileName(1:end-4));
+
+if biPolarFlag
+    filePathOut = [filePathOut, '_BiPolar'];
+end % END IF biPolarFlag
+
+if rawPhiFlag
+    filePathOut = [filePathOut, '_DeltaPhi'];
+end % END IF statsFlag
+
+if statsFlag
+    filePathOut = [filePathOut, '_Stats'];
+end % END IF statsFlag
+
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '_rawPhi.mat']);
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '.mat']);
-filePathOut = fullfile(pathOutName, [fileName, 'BiPolar_PLI_winSize', num2str(winSize), '.mat']);
+filePathOut = [filePathOut, '_PLI_winSize', num2str(winSize), '.mat'];
 
 %% Give User Feedback
 fprintf('******************************************************************\n')
@@ -100,17 +114,19 @@ else
     r   = zeros(winNum, pairNum, 1);
     
     if statsFlag
+        binEdge = [-pi:pi/100:pi];
+        
         circMean = zeros(winNum, pairNum, 3); % circular mean, upper bound, lower bound
         circMed  = zeros(winNum, pairNum, 1); % Cirular median
         circVar  = zeros(winNum, pairNum, 1); % circular variance
         vMParams = zeros(winNum, pairNum, 2); % thetahat, kappa
-        vMScale  = zeors(winNum, pairNum, 1); % Scaling params for vM (transfers the units to [counts])
-        RMSE     = zeros(winNum, pairNum, 1); % Mean squared Error
-        vMCorr   = zeros(winNum, pairNum, 2); % Circular and Angular Correlation coefficiant between von Mises and hist(delaPhi)
+        vMScale  = zeros(winNum, pairNum, 1); % Scaling params for vM (transfers the units to [counts])
+        RMSE     = zeros(winNum, pairNum, 2); % Mean squared Error
+        vMCorr   = zeros(winNum, pairNum, 1); % Circular and Angular Correlation coefficiant between von Mises and hist(delaPhi)
         vMR2     = zeros(winNum, pairNum, 1); % R-squared value
         circStd  = zeros(winNum, pairNum, 2); % angular and circular std
         circSkew = zeros(winNum, pairNum, 2); % Pewsey and Fischer Skewness
-        circKurt = zeros(winNum, pairnum, 2); % Pewsey and Fischer kurtosis
+        circKurt = zeros(winNum, pairNum, 2); % Pewsey and Fischer kurtosis
     end % END IF statsFlag
     
     if rawPhiFlag
@@ -214,7 +230,7 @@ for cp = 1:pairNum
     if surrFlag
         fprintf('Channel Pair %d/%d\n', cp, pairNum)
     else
-        if ~mod(cp,10)
+        if ~mod(cp,1)
             clc;
             fprintf('Channel Pair: %d/%d\n', cp, pairNum)
             fprintf('Time Spent: %f\n', timeSpent)
@@ -230,9 +246,12 @@ fprintf('Saving Data to: %s\n', filePathOut)
 save(filePathOut,'p','r','chanPairNums','smp', 'Header', 'deltaPhi', '-v7.3');
 
 if statsFlag
-    save(filaPathOut, 'circMean', 'circMed', 'circVar','vMParams',...
+    
+    [~, binCenter] = hist(ones(1,size(binEdge,1)),binEdge);
+    
+    save(filePathOut, 'circMean', 'circMed', 'circVar','vMParams',...
                       'vMScale','RMSE','vMCorr','vMR2','circStd',...
-                      'circSkew','circKurt', '-append')
+                      'circSkew','circKurt', 'binEdge', 'binCenter', '-append')
 end % END IF statsFlag
 
 end % END FUNCTION

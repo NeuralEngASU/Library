@@ -538,11 +538,16 @@ for ii = 1:sum(idx)
     %         smoothP(:,ii) = p(:,tmpIdx);
 %     smoothP(:,ii) = smooth(p(:,tmpIdx));
     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
 end % END FOR
 
 gridErr = std(smoothP, 0, 2);
 gridErr = gridErr/sqrt(sum(idx)); % Standard error
 gridErr = 2*gridErr; % 2*standard error.
+
+
+gridMeanP = mean(smoothP,2);
+gridMeanR = mean(smoothR,2);
 
 
 gridMean2 = mean(smoothP,2);
@@ -762,4 +767,130 @@ plot(yS)
 
 % plot(res)
 
+%% K-means
 
+chansPlot = [1:64];
+
+% Find Idx
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+smoothP = zeros(size(p,1), sum(idx));
+smoothR = zeros(size(p,1), sum(idx));
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
+end % END FOR
+
+
+%%
+% gridMeanP = mean(smoothP,2);
+% gridMeanR = mean(smoothR,2);
+% 
+% gridVarP = var(smoothP,1,2);
+% gridVarR = var(smoothR,1,2);
+% gridVarPhi = mean(circVar,2);
+
+gridMeanP = mean(p,2);
+gridMeanR = mean(r,2);
+gridVarPhi = mean(circVar,2);
+gridCorrPhi = nanmean(vMCorr,2);
+gridMeanPhi = nanmean(circMean(:,:,1),2);
+gridMeanThetahat = nanmean(vMParams(:,:,1),2);
+gridMeanKappa = nanmean(vMParams(:,:,2),2);
+
+gridMeanRMSE = mean(abs(RMSE(:,:,2)),2);
+
+gridMeanR2 = nanmean(vMR2,2);
+gridMeanComb = gridMeanP .* abs(gridMeanR-1);
+
+
+
+params.tapers = [2,10];
+params.Fs = 60;
+
+[S,t,f]=mtspecgramc(gridMeanP,[1,0.1],params);
+
+gridPowerP = S(:,1);
+
+gridPowerP = interp1([1:size(gridPowerP,1)], gridPowerP,linspace(1,157,1000)','spline');
+
+infLogical = isinf(gridMeanKappa);
+infIdx = find(infLogical == 1);
+
+gridMeanKappa(infLogical) = nan;
+
+for kk = 1:size(infIdx,1)
+    kkIdx = infIdx(kk);
+    gridMeanKappa(kkIdx) = nanmean(gridMeanKappa(kkIdx-1):gridMeanKappa(kkIdx+1));
+end
+
+% K-Mean
+
+% kData = [gridMeanP, gridMeanR,gridMeanComb];%gridVarP];
+kData = [gridMeanComb, gridPowerP ,gridVarPhi];%gridVarP];
+
+rng(1); % For reproducibility
+[kIdx,kC, kSum, kDist] = kmeans(kData, 1);
+
+meanKDist = mean(kDist(1:300));
+stdKDist = std(kDist(1:300));
+
+timeIdx =  [1:size(gridMeanP,1)];
+stdIdx = kDist >= (meanKDist + 5*stdKDist);
+
+figure;
+scatter3(gridMeanComb(~stdIdx), gridPowerP(~stdIdx),  gridVarPhi(~stdIdx), 'k.')
+hold on
+scatter3( gridMeanComb(stdIdx), gridPowerP(stdIdx), gridVarPhi(stdIdx), 'r.')
+% plot3(kC(1), kC(2), 'xr')
+hold off
+xlabel('gridMeanComb')
+ylabel('gridPowerP')
+zlabel('gridVarPhi')
+% axis 'square'
+% ylim([0,1])
+% zlim([0,1])
+
+figure;
+
+plot(gridMeanComb./max(gridMeanComb), 'r')
+hold on
+plot(kDist./max(kDist), 'b')
+%%
+figure;
+plot(kDist)
+hold on
+plot([1, size(kDist,1)], [meanKDist, meanKDist], 'r')
+plot([1, size(kDist,1)], [meanKDist + 5*stdKDist, meanKDist + 5*stdKDist], 'k')
+plot([1, size(kDist,1)], [meanKDist - 5*stdKDist, meanKDist - 5*stdKDist], 'k')
+hold off
+
+% x1 = min(kData(:,1)):0.01:max(kData(:,1));
+% x2 = min(kData(:,2)):0.01:max(kData(:,2));
+% [x1G,x2G] = meshgrid(x1,x2);
+% XGrid = [x1G(:),x2G(:)]; % Defines a fine grid on the plot
+% 
+% idx2Region = kmeans(XGrid,2,'MaxIter',1,'Start',kC);
+%     % Assigns each node in the grid to the closest centroid
+% 
+% figure;
+% gscatter(XGrid(:,1),XGrid(:,2),idx2Region,...
+%     [0,0.75,0.75;0.75,0,0.75;0.75,0.75,0],'..');
+% hold on;
+% plot(kData(:,1),kData(:,2),'k*','MarkerSize',5);
+% title 'Fisher''s Iris Data';
+% xlabel 'Petal Lengths (cm)';
+% ylabel 'Petal Widths (cm)';
+% legend('Region 1','Region 2','Region 3','Data','Location','Best');
+% hold off;
