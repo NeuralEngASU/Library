@@ -9,6 +9,8 @@ SURRNUM = 100;   % Number of surrogate calculations
 RAWPHIFLAG = 0;  % Raw deltaPhi flag, if true, save raw deltaPhi data
 BIPOLARFLAG = 0; % BiPolar Flag, if true, calculate the bipolar PLI
 STATSFLAG = 0;   % Stats Flag. If true output the statistics variables
+GLOBALFLAG = 0;  % Global average flag. If true, will compute the global average across given electrodes
+GLOBALCHAN = [1:64]; % Channels overwhich to compute global average
 
 % parse varargin
 for ii = 1:2:length(varargin)
@@ -27,6 +29,10 @@ surrNum = SURRNUM;
 rawPhiFlag = RAWPHIFLAG;
 biPolarFlag = BIPOLARFLAG;
 statsFlag = STATSFLAG;
+globalFlag = GLOBALFLAG;
+globalChan = sort(unique(GLOBALCHAN(:)), 'ascend');
+
+clear WINSIZE FS SURRFLAG SURRNUM RAWPHIFLAG BIPOLARFLAG STATSFLAG GLOBALFLAG GLOBALCHAN
 
 % Parse file strings
 pathInExpr = '(.+)?\\';
@@ -41,6 +47,16 @@ sizeFile = dir(filePath);
 sizeFile = round(sizeFile.bytes / 1024^2, 1);
 
 filePathOut = fullfile(pathOutName, fileName(1:end-4));
+
+if globalFlag
+    filePathOut = [filePathOut, '_Global'];
+    if sum(diff(globalChan)==1) == size(globalChan(:), 1)-1
+        filePathOut = [filePathOut, sprintf('%d-%d', min(globalChan), max(globalChan))];
+    else
+        filePathOut = [filePathOut, sprintf('%d~%d', min(globalChan), max(globalChan))];
+    end % END IF isConsecutive
+    
+end % END IF globalFlag
 
 if biPolarFlag
     filePathOut = [filePathOut, '_BiPolar'];
@@ -73,6 +89,11 @@ if biPolarFlag
     data = data2;
     clear data2
 end % END IF
+
+if globalFlag
+    globalAvg = mean(data(globalChan, :));
+    data = [globalAvg; data];
+end % END IF globalFlag
 
 % Find the number of channels
 numChans = size(data,1);
@@ -135,7 +156,17 @@ else
     
 end % END IF surrFlag
 
-Header.Fs = 500;
+if exist('header', 'var')
+    Header = header;
+    Header.FilePathIn = pathInName;
+    Header.FileNameIn = fileName;
+    Header.FileOutLoc = filePathOut;
+else
+    Header.Fs = 500;
+    Header.FilePathIn = pathInName;
+    Header.FileNameIn = fileName;
+    Header.FileOutLoc = filePathOut;
+end % END IF exist(header)
 
 
 %% Set up parrallel workers
@@ -243,16 +274,23 @@ end % END FOR
 
 fprintf('Saving Data to: %s\n', filePathOut)
 % save results
+
+if globalFlag
+    chanPairNums = chanPairNums-1;
+end % END IF globalFlag
+
 save(filePathOut,'p','r','chanPairNums','smp', 'Header', 'deltaPhi', '-v7.3');
 
+if globalFlag
+    save(filePathOut, 'globalChan', '-append')
+end % END IF globalFlag
+
 if statsFlag
-    
     [~, binCenter] = hist(ones(1,size(binEdge,1)),binEdge);
     
     save(filePathOut, 'circMean', 'circMed', 'circVar','vMParams',...
                       'vMScale','RMSE','vMCorr','vMR2','circStd',...
                       'circSkew','circKurt', 'binEdge', 'binCenter', '-append')
 end % END IF statsFlag
-
 end % END FUNCTION
 % EOF

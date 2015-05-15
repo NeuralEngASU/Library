@@ -569,7 +569,7 @@ hold on
 plot([0,0], [0,0], 'r') % Legend Stuff
 plot([0,0], [0,0], 'k') % Legned stuff
 
-[~,~,minutes] = Time2Samp(header.SzOffset, 500); % Clinical onset
+[~,~,minutes] = Time2Samp(Header.SzOffset, 500); % Clinical onset
 for tt = 1:size(minutes,1)
     plot([minutes(tt),minutes(tt)], [0, 1], 'r')
 end % END FOR
@@ -589,7 +589,7 @@ ylabel('PLI')
 legend({'Mean, NonSz', '1 std of mean, NonSz'}, 'location', 'south')
 
 % title(strrep(sprintf('Long Form Data: 2014PP02 R 10*log10 clim[-10.3, -10.1]'), '_', '\_'))
-title(strrep(sprintf('Long Form Data: 2014PP02 PLI'), '_', '\_'))
+title(strrep(sprintf('Long Form Data: 2014PP01 PLI'), '_', '\_'))
 
 set(pData, 'FaceColor', 'k')
 set(pData, 'EdgeColor', 'none')
@@ -612,7 +612,7 @@ imagesc(t,f,S')
 
 xlabel('Time, minutes')
 % ylabel('PLI Frequency')
-ylabel('R Frequency')
+ylabel('PLI Frequency')
 set(gca, 'XTick', unique([0:10:x(end), x(end)]))
 set(gca,'YDir','normal');
 xlim([0,x(end)])
@@ -792,7 +792,8 @@ for ii = 1:sum(idx)
     smoothR(:,ii) = smooth(r(:,tmpIdx));
 end % END FOR
 
-
+timeVal = linspace(0, size(smoothP,1)/60, size(smoothP,1));
+timeVal(end)
 %%
 % gridMeanP = mean(smoothP,2);
 % gridMeanR = mean(smoothR,2);
@@ -801,44 +802,44 @@ end % END FOR
 % gridVarR = var(smoothR,1,2);
 % gridVarPhi = mean(circVar,2);
 
-gridMeanP = mean(p,2);
-gridMeanR = mean(r,2);
-gridVarPhi = mean(circVar,2);
-gridCorrPhi = nanmean(vMCorr,2);
-gridMeanPhi = nanmean(circMean(:,:,1),2);
-gridMeanThetahat = nanmean(vMParams(:,:,1),2);
-gridMeanKappa = nanmean(vMParams(:,:,2),2);
+% gridMeanP = mean(p,2);
+% gridMeanR = mean(r,2);
+% gridVarPhi = mean(circVar,2);
+% gridCorrPhi = nanmean(vMCorr,2);
+% gridMeanPhi = nanmean(circMean(:,:,1),2);
+% gridMeanThetahat = nanmean(vMParams(:,:,1),2);
+% gridMeanKappa = nanmean(vMParams(:,:,2),2);
 
-gridMeanRMSE = mean(abs(RMSE(:,:,2)),2);
+% gridMeanRMSE = mean(abs(RMSE(:,:,2)),2);
+% 
+% gridMeanR2 = nanmean(vMR2,2);
+% gridMeanComb = gridMeanP .* abs(gridMeanR-1);
 
-gridMeanR2 = nanmean(vMR2,2);
-gridMeanComb = gridMeanP .* abs(gridMeanR-1);
 
 
-
-params.tapers = [2,10];
-params.Fs = 60;
-
-[S,t,f]=mtspecgramc(gridMeanP,[1,0.1],params);
-
-gridPowerP = S(:,1);
-
-gridPowerP = interp1([1:size(gridPowerP,1)], gridPowerP,linspace(1,157,1000)','spline');
-
-infLogical = isinf(gridMeanKappa);
-infIdx = find(infLogical == 1);
-
-gridMeanKappa(infLogical) = nan;
-
-for kk = 1:size(infIdx,1)
-    kkIdx = infIdx(kk);
-    gridMeanKappa(kkIdx) = nanmean(gridMeanKappa(kkIdx-1):gridMeanKappa(kkIdx+1));
-end
+% params.tapers = [2,10];
+% params.Fs = 60;
+% 
+% [S,t,f]=mtspecgramc(gridMeanP,[1,0.1],params);
+% 
+% gridPowerP = S(:,1);
+% 
+% gridPowerP = interp1([1:size(gridPowerP,1)], gridPowerP,linspace(1,157,1000)','spline');
+% 
+% infLogical = isinf(gridMeanKappa);
+% infIdx = find(infLogical == 1);
+% 
+% gridMeanKappa(infLogical) = nan;
+% 
+% for kk = 1:size(infIdx,1)
+%     kkIdx = infIdx(kk);
+%     gridMeanKappa(kkIdx) = nanmean(gridMeanKappa(kkIdx-1):gridMeanKappa(kkIdx+1));
+% end
 
 % K-Mean
 
 % kData = [gridMeanP, gridMeanR,gridMeanComb];%gridVarP];
-kData = [gridMeanComb, gridPowerP ,gridVarPhi];%gridVarP];
+kData = [gridMeanP, gridMeanR];%gridVarP];
 
 rng(1); % For reproducibility
 [kIdx,kC, kSum, kDist] = kmeans(kData, 1);
@@ -894,3 +895,164 @@ hold off
 % ylabel 'Petal Widths (cm)';
 % legend('Region 1','Region 2','Region 3','Data','Location','Best');
 % hold off;
+
+%% Findpeaks
+
+chansPlot = [1:64];
+desiredRef = [];
+
+
+% Define channel pairs
+
+if isempty(desiredRef)
+     desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+else
+    desiredChanPairs = [repmat(desiredRef, size(chansPlot(:),1), 1), chansPlot(:)];
+end % END IF isempty(desiredRef)
+
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+smoothP = zeros(size(p,1), sum(idx));
+smoothR = zeros(size(p,1), sum(idx));
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
+end % END FOR
+
+timeVal = linspace(0, size(smoothP,1)/60, size(smoothP,1));
+
+gridMeanP = mean(smoothP,2);
+gridMeanR = mean(smoothR,2);
+
+% k-means
+kData = [gridMeanP, gridMeanR];
+
+rng(1); % For reproducibility
+[kIdx,kC, kSum, kDist] = kmeans(kData, 1);
+
+gridMeanRFlip = 1-gridMeanR;
+
+threshKDist = mean(kDist) + 5*std(kDist);
+threshP = mean(gridMeanP) + 5*std(gridMeanP);
+% threshP = mean(derp(:,2)) + 5*std(derp(:,2));
+threshR = mean(gridMeanRFlip) + 5*std(gridMeanRFlip);
+
+%% Find peaks
+
+[pksK, locsK, wK, kP] = findpeaks(        kDist, timeVal','minPeakHeight', threshKDist, 'MinPeakDistance',20);
+% [pksP, locsP, wP, pP] = findpeaks(    gridMeanP, timeVal','minPeakHeight',     threshP, 'MinPeakDistance',20);
+[pksR, locsR, wR, pR] = findpeaks(gridMeanRFlip, timeVal','minPeakHeight',     threshR, 'MinPeakDistance',20);
+
+% Plot results
+
+header= Header;
+
+[~, ~, minutes] = Time2Samp(header.SzOffset, 500);
+
+figure;
+scatter(locsK, pksK./max(pksK), 'b*')
+hold on
+scatter(locsP, pksP./max(pksP), 'g*')
+scatter(locsR, pksR./max(pksR), 'r*')
+for ii = 1:size(minutes,1)
+    
+    plot([minutes(ii), minutes(ii)], [0,1], 'k:')
+    
+end % END FOR
+hold off
+xlim([0, timeVal(end)])
+ylim([0,1])
+set(gca, 'XTick', unique([0:10:timeVal(end), timeVal(end)]))
+
+candidTimes = sort([locsK(:);locsP(:);locsR(:)], 'ascend');
+
+diffTimes = diff(candidTimes) <= 10;
+
+diffTimes2 = [[diffTimes;0;0], [diffTimes(2:end);0;0;0]];
+
+diffTimesSum = sum(diffTimes2,2);
+
+diffTimesIdx = diffTimesSum == 2;
+
+chosenTimes = candidTimes(diffTimesIdx);
+
+figure;
+scatter(locsK, pksK./max(pksK), 'b*')
+hold on
+scatter(locsP, pksP./max(pksP), 'g*')
+scatter(locsR, pksR./max(pksR), 'r*')
+for ii = 1:size(minutes,1)
+    
+    plot([minutes(ii), minutes(ii)], [0,1], 'k:', 'LineWidth', 2)
+    
+end % END FOR
+
+for ii = 1:size(chosenTimes,1)
+    plot([chosenTimes(ii), chosenTimes(ii)], [0,1], 'm:','LineWidth', 2)
+end % END FOR
+
+hold off
+
+xlim([0, timeVal(end)])
+ylim([0,1])
+set(gca, 'XTick', unique([0:10:timeVal(end), timeVal(end)]))
+
+
+%% Varience Spectrogram
+figure;
+gridMeanVar = 1-gridMeanR;
+
+% Plot vairance
+a1 = subplot(2,1,1);
+
+plot(linspace(0, timeVal(end), size(gridMeanR,1)), gridMeanVar);
+hold on
+for ii = 1:size(minutes,1)
+    plot([minutes(ii), minutes(ii)], [0,1], 'k:', 'LineWidth', 1)
+end % END FOR
+
+xlabel('Time, minutes')
+ylabel('Circular Variance')
+title(sprintf('Circular Vairence: %s', '2014PP01\_D03'));
+set(gca, 'XTick', unique([0:10:timeVal(end), timeVal(end)]))
+xlim([0,timeVal(end)])
+ylim([0, max(gridMeanVar)*1.1])
+
+
+% Plot variance spectrum
+a2 = subplot(2,1,2);
+params.tapers = [2,10];
+params.Fs = 60;
+
+[S,t,f]=mtspecgramc(gridMeanVar,[1,0.1],params);
+colormap(jet)
+
+% imagesc(t,f,10*log10(S'))
+imagesc(t,f,S')
+
+xlabel('Time, minutes')
+% ylabel('PLI Frequency')
+ylabel('Var Frequency')
+set(gca, 'XTick', unique([0:10:timeVal(end), timeVal(end)]))
+xlim([0,timeVal(end)])
+set(gca,'YDir','normal');
+
+%%
+
+szTimes = [minutes,chosenTimes];
+
+timeErr = std(szTimes, 0, 2);
+timeErr = timeErr./sqrt(2); % Standard error
+timeErr = 2*timeErr; % 2*standard error.
+
+

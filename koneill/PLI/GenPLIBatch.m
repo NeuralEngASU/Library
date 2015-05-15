@@ -10,7 +10,7 @@
 % fileList{2} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz2_DN.mat'};
 % fileList{3} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz3_DN.mat'};
 % fileList{1} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz7_DN.mat'};
-fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip1_Sz1_1400_2400sec.mat'};
+fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip1.mat'};
 % fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip3.mat'};
 % fileList{3} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz3_DN.mat'};
 
@@ -21,6 +21,6 @@ Fs = [500,500, 500, 500, 500, 500, 500];
 
 for ii = 1:length(fileList)
     for jj = 1:length(winSize)
-        [filePathOut] = GenPLI(fileList{ii}{1}, outputPath, 'winSize', winSize(jj), 'rawPhiFlag',1, 'Fs', Fs(ii), 'STATSFLAG', 1);
+        [filePathOut] = GenPLI(fileList{ii}{1}, outputPath, 'winSize', winSize(jj), 'GlobalFlag', 1, 'rawPhiFlag',0, 'Fs', Fs(ii), 'STATSFLAG', 0);
     end % END FOR
 end % END FOR
