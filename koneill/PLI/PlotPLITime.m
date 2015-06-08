@@ -1055,4 +1055,423 @@ timeErr = std(szTimes, 0, 2);
 timeErr = timeErr./sqrt(2); % Standard error
 timeErr = 2*timeErr; % 2*standard error.
 
+%% Delta Data
 
+ref = [5];
+% biPolarRef = (ref+1)/2;
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+dataLen = Header.DataPoints;
+Fs = Header.Fs;
+winSize = 0.0167;
+winNum  = floor(dataLen / (winSize * Fs));
+
+nsxData = openNSx(filePath, 'read', ['c:', num2str(ref)], ['t:1:', num2str(winNum*winSize*Fs)]);
+data = nsxData.Data;
+chansPlot = [1:16];
+figure;
+% Find Idx
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+smoothP = zeros(size(p,1), sum(idx));
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothP(:,ii) = smooth(p(:,tmpIdx));
+    smoothR(:,ii) = smooth(r(:,tmpIdx));
+end % END FOR
+
+gridErr = std(smoothP, 0, 2);
+gridErr = gridErr/sqrt(sum(idx)); % Standard error
+gridErr = 2*gridErr; % 2*standard error.
+
+
+gridMeanP = mean(smoothP,2);
+gridMeanR = mean(smoothR,2);
+
+
+gridMean2 = mean(smoothP,2);
+
+timeMax = size(p,1);
+sizeMax = Header.Fs*timeMax;
+
+
+x = linspace(0,timeMax/60,size(p,1));
+xx = [x, fliplr(x)];
+
+patchdata =  [[gridMean2 + gridErr]', fliplr([gridMean2 - gridErr]')];
+
+meanBG = mean(gridMean2);
+stdBG =  std(gridMean2);
+
+a1 = subplot(4,1,1);
+hold on
+plot([0,0], [0,0], 'r') % Legend Stuff
+plot([0,0], [0,0], 'k') % Legned stuff
+
+% [~,~,minutes] = Time2Samp(Header.SzOffset, 500); % Clinical onset
+% for tt = 1:size(minutes,1)
+%     plot([minutes(tt),minutes(tt)], [0, 1], 'r')
+% end % END FOR
+
+pData = patch(xx, patchdata, 1);
+lData = plot(x, gridMean2, 'b', 'linewidth', 1);
+plot(x, repmat(meanBG + stdBG, 1,size(p,1)), 'k')
+plot(x, repmat(meanBG, 1,size(p,1)), 'r')
+plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
+hold off
+ylim([0,1])
+% ylim([0.9,1])
+xlim([0,x(end)])
+xlabel('Time, minutes')
+ylabel('PLI')
+% ylabel('R')
+legend({'Mean', '1 std of mean'}, 'location', 'North')
+
+% title(strrep(sprintf('Long Form Data: 2014PP02 R 10*log10 clim[-10.3, -10.1]'), '_', '\_'))
+title(strrep(sprintf('Long Form Data: Delta 20080726-113238-002 PLI'), '_', '\_'))
+
+set(pData, 'FaceColor', 'k')
+set(pData, 'EdgeColor', 'none')
+set(pData, 'FaceAlpha', 0.25)
+set(gca, 'XTick', unique([0:10:x(end), x(end)]))
+
+% Spectrum
+a2 = subplot(4,1,2);
+
+params.tapers = [2,10];
+params.Fs = 60/Header.params.winSize;
+
+[S,t,f]=mtspecgramc(gridMean2,[1,0.1],params);
+colormap(jet)
+
+% imagesc(t,f,S', [0.09, 0.1])
+% imagesc(t,f,10*log10(S'), [-10.3, -10.1])
+% imagesc(t,f,10*log10(S'))
+imagesc(t,f,S')
+
+xlabel('Time, minutes')
+% ylabel('PLI Frequency')
+ylabel('PLI Frequency')
+set(gca, 'XTick', unique([0:10:x(end), x(end)]))
+set(gca,'YDir','normal');
+xlim([0,x(end)])
+
+% Power-Time
+colormap(jet)
+a3 = subplot(4,1,3);
+
+% tmpS = 10*log10(S);
+tmpS = S;
+
+plot(linspace(0,timeMax/60,size(S,1)), tmpS(:,1), 'r')
+hold on
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,2),'g')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,3),'c')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,4),'b')
+plot(linspace(0,timeMax/60,size(S,1)),tmpS(:,5),'m')
+hold off
+
+title('Spectrum Power')
+xlabel('Time, minutes')
+ylabel('Power')
+set(gca, 'XTick', unique([0:10:x(end), x(end)]))
+xlim([0,x(end)])
+
+legend(num2str(f(1:5)), 'Location', 'best')
+
+% Votlage
+a4 = subplot(4,1,4);
+desiredRef = ref;
+% desiredRef = biPolarRef;
+
+plot(linspace(0,timeMax/60,sizeMax), data);
+% title(sprintf('Raw waveform, channel: %d-%d', desiredRef*2-1, desiredRef*2))
+title(sprintf('Raw waveform, channel: %d', desiredRef))
+xlabel('Time, minutes')
+ylabel('Voltage, uV')
+set(gca, 'XTick', unique([0:10:x(end), x(end)]))
+xlim([0,x(end)])
+
+linkaxes([a1,a2,a3, a4], 'x')
+
+%% Delta Speech Maps
+
+% Grid Map (16 elecrtrodes)
+figure;
+chansPlot = [1:16];
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+
+for ii = 1:size(desiredChanPairs,1)    
+    subplot(12,10, ii)
+    plot([0,0], [0,0], 'k:'); 
+    hold on
+    text(0.5, 0.5, [num2str(desiredChanPairs(ii,1)), ' - ', num2str(desiredChanPairs(ii,2))], 'horizontalalignment', 'Center');
+    hold off
+    xlim([0,1])
+    ylim([0,1])
+    
+    if ii == 5; title('Grid Map 1-16 chan'); end
+    
+    set(gca, 'XTick', [])
+    set(gca, 'YTick', [])
+end % END FOR
+
+
+% InterGrid Ref Map
+figure;
+refChan = 1;
+chansPlot = [refChan, 17:32];
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+
+idx = zeros(size(desiredChanPairs,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((desiredChanPairs(:,1) == refChan) & (desiredChanPairs(:,2) == desiredChanPairs(jj,2)));
+end
+
+desiredChanPairs = desiredChanPairs(idx,:);
+
+for ii = 1:size(desiredChanPairs,1)    
+    subplot(4,4, ii)
+    plot([0,0], [0,0], 'k:'); 
+    hold on
+    text(0.5, 0.5, [num2str(desiredChanPairs(ii,1)), ' - ', num2str(desiredChanPairs(ii,2))], 'horizontalalignment', 'Center');
+    hold off
+    xlim([0,1])
+    ylim([0,1])
+    
+    if ii == 2; title('Grid Map 1-16 chan'); end
+    
+    set(gca, 'XTick', [])
+    set(gca, 'YTick', [])
+end % END FOR
+
+
+
+%% Delta Speech Grid
+
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+Fs = Header.Fs;
+% winSize = Header.params.winSize;
+% winNum  = floor(dataLen / (winSize * Fs));
+
+% nsxData = openNSx(filePath, 'read', ['c:', num2str(ref)], ['t:1:', num2str(winNum*winSize*Fs)]);
+% data = nsxData.Data;
+chansPlot = [1:16];
+figure;
+% Find Idx
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+grid1P = zeros(size(p,1), sum(idx), size(p,3));
+grid1R = grid1P;
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    grid1P(:,ii,:) = p(:,tmpIdx,:);
+    grid1R(:,ii,:) = r(:,tmpIdx,:);
+end % END FOR
+
+gridErr = std(grid1P, 0, 3);
+gridErr = gridErr/sqrt(sum(idx)); % Standard error
+gridErr = 2*gridErr; % 2*standard error.
+
+
+gridMeanP = mean(grid1P,2);
+gridMeanR = mean(grid1R,2);
+
+timeMax = size(p,1);
+sizeMax = Header.Fs*Header.params.winSize*timeMax;
+
+trialMeanP = mean(grid1P,3);
+trialMeanR = mean(grid1R,3);
+
+timeEvent = Header.params.winNum /2.5;
+for ii = 1:120
+
+    subplot(12,10, ii)
+    plot([timeEvent,timeEvent], [0,1], 'k:'); hold on; plot(trialMeanP(:,ii)); hold off
+    xlim([1, Header.params.winNum])
+    ylim([0,1])
+
+end % END FOR
+
+%% Delta Speech InterGrid
+
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+Fs = Header.Fs;
+% winSize = Header.params.winSize;
+% winNum  = floor(dataLen / (winSize * Fs));
+
+% nsxData = openNSx(filePath, 'read', ['c:', num2str(ref)], ['t:1:', num2str(winNum*winSize*Fs)]);
+% data = nsxData.Data;
+
+for kk = 1:16
+    refChan = kk;
+    chansPlot = [refChan, 17:32];
+    figure;
+    % Find Idx
+    desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+    idx = zeros(size(chanPairNums,1),1);
+    % Find idicies
+    for jj = 1:size(desiredChanPairs,1)
+        idx = idx | ((chanPairNums(:,1) == refChan) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+    end
+    
+    % Calc Whole grid mean and std err
+    grid1P = zeros(size(p,1), sum(idx), size(p,3));
+    grid1R = grid1P;
+    
+    idxIdx = find(idx==1);
+    
+    for ii = 1:sum(idx)
+        tmpIdx = idxIdx(ii);
+        %         smoothP(:,ii) = p(:,tmpIdx);
+        %     smoothP(:,ii) = smooth(p(:,tmpIdx));
+        grid1P(:,ii,:) = p(:,tmpIdx,:);
+        grid1R(:,ii,:) = r(:,tmpIdx,:);
+    end % END FOR
+    
+    gridErr = std(grid1P, 0, 2);
+    gridErr = gridErr/sqrt(sum(idx)); % Standard error
+    gridErr = 2*gridErr; % 2*standard error.
+    
+    
+    gridMeanP = mean(grid1P,2);
+    gridMeanR = mean(grid1R,2);
+    
+    timeMax = size(p,1);
+    sizeMax = Header.Fs*Header.params.winSize*timeMax;
+    
+    trialMeanP = mean(grid1P,3);
+    trialMeanR = mean(grid1R,3);
+    
+    timeEvent = Header.params.winNum/2.5;
+    
+    for ii = 1:16
+        
+        subplot(4,4, ii)
+        plot([timeEvent,timeEvent], [0,1], 'k:'); hold on; plot(trialMeanP(:,ii)); hold off
+        
+    end % END FOR
+end
+
+%% Delta Plot patch
+
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+Fs = Header.Fs;
+% winSize = Header.params.winSize;
+% winNum  = floor(dataLen / (winSize * Fs));
+
+% nsxData = openNSx(filePath, 'read', ['c:', num2str(ref)], ['t:1:', num2str(winNum*winSize*Fs)]);
+% data = nsxData.Data;
+chansPlot = [13, 16];
+figure;
+% Find Idx
+desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+idx = zeros(size(chanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((chanPairNums(:,1) == desiredChanPairs(jj,1)) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+% Calc Whole grid mean and std err
+grid1P = zeros(size(p,1), sum(idx), size(p,3));
+grid1R = grid1P;
+
+idxIdx = find(idx==1);
+
+for ii = 1:sum(idx)
+    tmpIdx = idxIdx(ii);
+    %         smoothP(:,ii) = p(:,tmpIdx);
+%     smoothP(:,ii) = smooth(p(:,tmpIdx));
+    grid1P(:,ii,:) = p(:,tmpIdx,:);
+    grid1R(:,ii,:) = r(:,tmpIdx,:);
+end % END FOR
+
+gridErr = std(grid1P, 0, 3);
+gridErr = gridErr/sqrt(size(p,3)); % Standard error
+gridErr = 2*gridErr; % 2*standard error.
+
+
+gridMeanP = mean(grid1P,2);
+gridMeanR = mean(grid1R,2);
+
+timeMax = size(p,1);
+sizeMax = Header.Fs*Header.params.winSize*timeMax;
+
+trialMeanP = mean(grid1P,3);
+trialMeanR = mean(grid1R,3);
+
+timeEvent = 1;
+
+x = linspace(0, size(p,1) * Header.params.winSize, Header.params.winNum);
+xx = [x, fliplr(x)];
+
+patchdata =  [[trialMeanP + gridErr]', fliplr([trialMeanP - gridErr]')];
+
+meanBG = mean(trialMeanP);
+stdBG =  std(trialMeanP);
+
+% plot
+subplot(2,1,1)
+hold on
+plot([0,0], [0,0], 'r') % Legend Stuff
+plot([0,0], [0,0], 'k') % Legned stuff
+
+plot([timeEvent, timeEvent], [0,1], 'k:')
+
+pData = patch(xx, patchdata, 1);
+lData = plot(x, trialMeanP, 'b', 'linewidth', 1);
+plot(x, repmat(meanBG + stdBG, 1,size(p,1)), 'k')
+plot(x, repmat(meanBG, 1,size(p,1)), 'r')
+plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
+hold off
+ylim([0,1])
+% ylim([0.9,1])
+xlim([0,x(end)])
+xlabel('Time, seconds')
+ylabel('Trial Averaged PLI')
+% ylabel('R')
+legend({'Mean', '1 std'}, 'location', 'NorthEast')
+
+set(pData, 'FaceColor', 'k')
+set(pData, 'EdgeColor', 'none')
+set(pData, 'FaceAlpha', 0.25)
+set(gca, 'XTick', unique([0:1:x(end), x(end)]))
+
+
+subplot(2,1,2)
+params.tapers = [2,10];
+params.Fs = size(p,1)/2.5;
+
+[S,t,f]=mtspecgramc(trialMeanP,[0.25,0.05],params);
+colormap(jet)
+imagesc(t,f,10*log10(S'))
+
+xlabel('Time, Seconds')
+% ylabel('PLI Frequency')
+ylabel('PLI Frequency')
+set(gca, 'XTick', unique([0:1:x(end), x(end)]))
+set(gca,'YDir','normal');
+xlim([0,x(end)])
+ylim([0, .5*params.Fs])

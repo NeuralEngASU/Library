@@ -24,3 +24,69 @@ for ii = 1:length(fileList)
         [filePathOut] = GenPLI(fileList{ii}{1}, outputPath, 'winSize', winSize(jj), 'GlobalFlag', 1, 'rawPhiFlag',0, 'Fs', Fs(ii), 'STATSFLAG', 0);
     end % END FOR
 end % END FOR
+
+%% Delta Data
+
+fileList{1} = {'E:\data\PLI\delta\Verbal\20080730-151259\20080730-151259-002.ns5'};
+
+outputPath = 'E:\data\PLI\delta\PLIOutput';
+
+params.winSize = 0.0125;
+params.Fs = 30000;
+params.chanProcess = [1:32];
+params.surrFlag = 0;
+params.surrNum = 100;
+params.rawPhiFlag = 0;
+params.biPolarFlag = 0;
+params.statsFlag = 0;
+params.globalFlag = 0;
+params.globalChan = [1:32];
+params.word = 'yes';
+
+for kk = 1:10
+
+    wordList = {'yes'    'no'    'hot'    'cold'    'hungry'    'thirsty'    'hello'    'goodbye'    'more'    'less'};
+    
+    params.word = wordList{kk};
+for ii = 1:length(fileList)
+    for jj = 1:length(params.winSize)
+        [filePathOut] = GenPLIVerbal(fileList{ii}{1}, outputPath, params);
+    end % END FOR
+end % END FOR
+end % END FOR WORD
+%%
+params.winSize = 0.0333;
+params.Fs = 30000;
+params.chanProcess = [1:32];
+params.surrFlag = 0;
+params.surrNum = 100;
+params.rawPhiFlag = 0;
+params.biPolarFlag = 0;
+params.statsFlag = 0;
+params.globalFlag = 0;
+params.globalChan = [1:32];
+
+for ii = 1:length(fileList)
+    for jj = 1:length(params.winSize)
+        [filePathOut] = GenPLIChan(fileList{ii}{1}, outputPath, params);
+    end % END FOR
+end % END FOR
+
+params.winSize = 0.25;
+params.Fs = 30000;
+params.chanProcess = [1:32];
+params.surrFlag = 0;
+params.surrNum = 100;
+params.rawPhiFlag = 0;
+params.biPolarFlag = 0;
+params.statsFlag = 0;
+params.globalFlag = 0;
+params.globalChan = [1:32];
+
+for ii = 1:length(fileList)
+    for jj = 1:length(params.winSize)
+        [filePathOut] = GenPLIChan(fileList{ii}{1}, outputPath, params);
+    end % END FOR
+end % END FOR
+
+% EOF
