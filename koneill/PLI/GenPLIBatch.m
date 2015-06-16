@@ -89,4 +89,33 @@ for ii = 1:length(fileList)
     end % END FOR
 end % END FOR
 
+%% Delta Bands + Original
+
+fileList{1} = {'E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData.mat'};
+% fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Alpha.mat'};
+% fileList{2} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Beta.mat'};
+% fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Chi.mat'};
+% fileList{2} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Delta.mat'};
+% fileList{3} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Gamma.mat'};
+% fileList{4} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Theta.mat'};
+
+outputPath = 'E:\data\PLI\delta\PLIOutput';
+
+params.winSize = 0.1;
+params.Fs = 5000;
+params.chanProcess = [1:32];
+params.surrFlag = 0;
+params.surrNum = 0;
+params.rawPhiFlag = 0;
+params.biPolarFlag = 0;
+params.statsFlag = 0;
+params.globalFlag = 0;
+params.globalChan = [1:32];
+
+for ii = 1:length(fileList)
+    for jj = 1:length(params.winSize)
+        [filePathOut] = GenPLIVerbal(fileList{ii}{1}, outputPath, params);
+    end % END FOR
+end % END FOR
+
 % EOF

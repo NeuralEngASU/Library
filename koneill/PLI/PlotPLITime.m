@@ -1258,10 +1258,11 @@ end % END FOR
 
 
 
-%% Delta Speech Grid
+%% Delta Speech Grid FreqBand
 
 filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
 Fs = Header.Fs;
+desClass = 1;
 % winSize = Header.params.winSize;
 % winNum  = floor(dataLen / (winSize * Fs));
 
@@ -1278,7 +1279,7 @@ for jj = 1:size(desiredChanPairs,1)
 end
 
 % Calc Whole grid mean and std err
-grid1P = zeros(size(p,1), sum(idx), size(p,3));
+grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:, Header.class == desClass),4));
 grid1R = grid1P;
 
 idxIdx = find(idx==1);
@@ -1287,11 +1288,11 @@ for ii = 1:sum(idx)
     tmpIdx = idxIdx(ii);
     %         smoothP(:,ii) = p(:,tmpIdx);
 %     smoothP(:,ii) = smooth(p(:,tmpIdx));
-    grid1P(:,ii,:) = p(:,tmpIdx,:);
-    grid1R(:,ii,:) = r(:,tmpIdx,:);
+    grid1P(:,ii,:,:) = p(:,tmpIdx,:, Header.class == desClass);
+    grid1R(:,ii,:,:) = r(:,tmpIdx,:, Header.class == desClass);
 end % END FOR
 
-gridErr = std(grid1P, 0, 3);
+gridErr = std(grid1P, 0, 4);
 gridErr = gridErr/sqrt(sum(idx)); % Standard error
 gridErr = 2*gridErr; % 2*standard error.
 
@@ -1302,8 +1303,8 @@ gridMeanR = mean(grid1R,2);
 timeMax = size(p,1);
 sizeMax = Header.Fs*Header.params.winSize*timeMax;
 
-trialMeanP = mean(grid1P,3);
-trialMeanR = mean(grid1R,3);
+trialMeanP = mean(grid1P,4);
+trialMeanR = mean(grid1R,4);
 
 timeEvent = Header.params.winNum /2.5;
 for ii = 1:120
@@ -1319,6 +1320,7 @@ end % END FOR
 
 filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
 Fs = Header.Fs;
+desClass = 1;
 % winSize = Header.params.winSize;
 % winNum  = floor(dataLen / (winSize * Fs));
 
@@ -1338,7 +1340,7 @@ for kk = 1:16
     end
     
     % Calc Whole grid mean and std err
-    grid1P = zeros(size(p,1), sum(idx), size(p,3));
+    grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:,Header.class == desClass),4));
     grid1R = grid1P;
     
     idxIdx = find(idx==1);
@@ -1347,23 +1349,23 @@ for kk = 1:16
         tmpIdx = idxIdx(ii);
         %         smoothP(:,ii) = p(:,tmpIdx);
         %     smoothP(:,ii) = smooth(p(:,tmpIdx));
-        grid1P(:,ii,:) = p(:,tmpIdx,:);
-        grid1R(:,ii,:) = r(:,tmpIdx,:);
+        grid1P(:,ii,:,:) = p(:,tmpIdx,:, Header.class == desClass);
+        grid1R(:,ii,:,:) = r(:,tmpIdx,:, Header.class == desClass);
     end % END FOR
     
-    gridErr = std(grid1P, 0, 2);
+    gridErr = std(grid1P, 0, 4);
     gridErr = gridErr/sqrt(sum(idx)); % Standard error
     gridErr = 2*gridErr; % 2*standard error.
     
     
-    gridMeanP = mean(grid1P,2);
-    gridMeanR = mean(grid1R,2);
+%     gridMeanP = mean(grid1P,2);
+%     gridMeanR = mean(grid1R,2);
     
     timeMax = size(p,1);
     sizeMax = Header.Fs*Header.params.winSize*timeMax;
     
-    trialMeanP = mean(grid1P,3);
-    trialMeanR = mean(grid1R,3);
+    trialMeanP = mean(grid1P,4);
+    trialMeanR = mean(grid1R,4);
     
     timeEvent = Header.params.winNum/2.5;
     
@@ -1395,7 +1397,7 @@ for jj = 1:size(desiredChanPairs,1)
 end
 
 % Calc Whole grid mean and std err
-grid1P = zeros(size(p,1), sum(idx), size(p,3));
+grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:,Header.class==1),4));
 grid1R = grid1P;
 
 idxIdx = find(idx==1);
@@ -1404,12 +1406,12 @@ for ii = 1:sum(idx)
     tmpIdx = idxIdx(ii);
     %         smoothP(:,ii) = p(:,tmpIdx);
 %     smoothP(:,ii) = smooth(p(:,tmpIdx));
-    grid1P(:,ii,:) = p(:,tmpIdx,:);
-    grid1R(:,ii,:) = r(:,tmpIdx,:);
+    grid1P(:,ii,:,:) = p(:,tmpIdx,:, Header.class == 1);
+    grid1R(:,ii,:,:) = r(:,tmpIdx,:, Header.class == 1);
 end % END FOR
 
-gridErr = std(grid1P, 0, 3);
-gridErr = gridErr/sqrt(size(p,3)); % Standard error
+gridErr = std(grid1P, 0, 4);
+gridErr = gridErr/sqrt(size(p,4)); % Standard error
 gridErr = 2*gridErr; % 2*standard error.
 
 
@@ -1419,8 +1421,8 @@ gridMeanR = mean(grid1R,2);
 timeMax = size(p,1);
 sizeMax = Header.Fs*Header.params.winSize*timeMax;
 
-trialMeanP = mean(grid1P,3);
-trialMeanR = mean(grid1R,3);
+trialMeanP = mean(grid1P,4);
+trialMeanR = mean(grid1R,4);
 
 timeEvent = 1;
 
@@ -1430,7 +1432,7 @@ xx = [x, fliplr(x)];
 patchdata =  [[trialMeanP + gridErr]', fliplr([trialMeanP - gridErr]')];
 
 meanBG = mean(trialMeanP);
-stdBG =  std(trialMeanP);
+stdBG =  std(trialMeanP)*2;
 
 % plot
 subplot(2,1,1)
@@ -1475,3 +1477,106 @@ set(gca, 'XTick', unique([0:1:x(end), x(end)]))
 set(gca,'YDir','normal');
 xlim([0,x(end)])
 ylim([0, .5*params.Fs])
+
+%% Delta Intergrid Std and patch
+
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+Fs = Header.Fs;
+desClass = 1;
+
+for kk = 1:16
+    refChan = kk;
+    chansPlot = [refChan, 17:32];
+    figure;
+    % Find Idx
+    desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+    idx = zeros(size(chanPairNums,1),1);
+    % Find idicies
+    for jj = 1:size(desiredChanPairs,1)
+        idx = idx | ((chanPairNums(:,1) == refChan) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+    end
+    
+    % Calc Whole grid mean and std err
+    grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:,Header.class == desClass),4));
+    grid1R = grid1P;
+    
+    idxIdx = find(idx==1);
+    
+    for ii = 1:sum(idx)
+        tmpIdx = idxIdx(ii);
+        %         smoothP(:,ii) = p(:,tmpIdx);
+        %     smoothP(:,ii) = smooth(p(:,tmpIdx));
+        grid1P(:,ii,:,:) = p(:,tmpIdx,:, Header.class == desClass);
+        grid1R(:,ii,:,:) = r(:,tmpIdx,:, Header.class == desClass);
+    end % END FOR
+    
+    gridErr = std(grid1P, 0, 4);
+    gridErr = gridErr/size(grid1P,4); % Standard error
+    gridErr = 2*gridErr; % 2*standard error.
+    
+    
+%     gridMeanP = mean(grid1P,2);
+%     gridMeanR = mean(grid1R,2);
+    
+    timeMax = size(p,1);
+    sizeMax = Header.Fs*Header.params.winSize*timeMax;
+    
+    trialMeanP = mean(grid1P,4);
+    trialMeanR = mean(grid1R,4);
+    
+    timeEvent = Header.params.winNum/2.5;
+    
+    for ii = 1:16
+        
+        subplot(4,4, ii)
+        
+        gridMeanP = mean(grid1P,2);
+        gridMeanR = mean(grid1R,2);
+        
+        timeMax = size(p,1);
+        sizeMax = Header.Fs*Header.params.winSize*timeMax;
+        
+        trialMeanP = mean(grid1P,4);
+        trialMeanR = mean(grid1R,4);
+        
+        timeEvent = 1;
+        
+        x = linspace(0, size(p,1) * Header.params.winSize, Header.params.winNum);
+        xx = [x, fliplr(x)];
+        
+        patchdata =  [[trialMeanP(:,ii) + gridErr(:,ii)]', fliplr([trialMeanP(:,ii) - gridErr(:,ii)]')];
+        
+        meanBG = mean(trialMeanP(1:10,ii));
+        stdBG =  std(trialMeanP(1:10,ii))*2;
+        
+%         meanBG = mean(trialMeanP(1:1/Header.params.winSize,ii));
+%         stdBG =  std(trialMeanP(1:1/Header.params.winSize,ii))*2;
+        
+        % plot
+        hold on
+        plot([0,0], [0,0], 'r') % Legend Stuff
+        plot([0,0], [0,0], 'k') % Legned stuff
+        
+        plot([timeEvent, timeEvent], [0,1], 'k:')
+        
+        pData = patch(xx, patchdata, 1);
+        lData = plot(x, trialMeanP(:,ii), 'b', 'linewidth', 1);
+%         plot(x, repmat(meanBG + stdBG, 1,size(p,1)), 'k')
+%         plot(x, repmat(meanBG, 1,size(p,1)), 'r')
+%         plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
+        hold off
+        ylim([0,1])
+        % ylim([0.9,1])
+        xlim([0,x(end)])
+        xlabel('Time, seconds')
+        ylabel('Trial Averaged PLI')
+        % ylabel('R')
+%         legend({'Mean', '1 std'}, 'location', 'NorthEast')
+        
+        set(pData, 'FaceColor', 'k')
+        set(pData, 'EdgeColor', 'none')
+        set(pData, 'FaceAlpha', 0.25)
+        set(gca, 'XTick', unique([0:1:x(end), x(end)]))
+       
+    end % END FOR
+end

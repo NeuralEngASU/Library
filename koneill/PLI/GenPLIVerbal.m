@@ -11,7 +11,6 @@ if ~isfield(params, 'biPolarFlag'); biPolarFlag = 0;      else biPolarFlag = par
 if ~isfield(params, 'statsFlag');   statsFlag   = 0;      else statsFlag   = params.statsFlag; end
 if ~isfield(params, 'globalFlag');  globalFlag  = 0;      else globalFlag  = params.globalFlag; end
 if ~isfield(params, 'globalChan');  globalChan  = [1:64]; else globalChan  = sort(unique(params.globalChan(:)), 'ascend'); end
-if ~isfield(params, 'word');        word        = 'yes' ; else word        = params.word; end
 
 % Parse file strings
 pathInExpr = '(.+)?\\';
@@ -51,7 +50,7 @@ end % END IF statsFlag
 
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '_rawPhi.mat']);
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '.mat']);
-filePathOut = [filePathOut, '_PLI_winSize', num2str(winSize), '_Word', word, '.mat'];
+filePathOut = [filePathOut, '_PLI_winSize', num2str(winSize), '.mat'];
 
 %% Give User Feedback
 fprintf('******************************************************************\n')
@@ -61,9 +60,17 @@ fprintf('Data Size: %f MB\n',sizeFile)
 
 %% Parse variables
 % load(filePath, '-mat');
-Header = openNSx(filePath);
-Header = Header.MetaTags;
-Fs = Header.SamplingFreq;
+load(filePath);
+% Header = Header.Header;
+
+if ~exist('Header', 'var')
+    Header.Fs = 5000;
+    Header.class = class;
+    bandData = data(2501:15000,:,:);
+else
+    Fs = Header.Fs;
+end;
+
 % % Biploar
 % if biPolarFlag
 %     data2 = data(1:2:end,:) - data(2:2:end,:);
@@ -83,29 +90,29 @@ numChans = size(chanProcess,1);
 chanPairNums = nchoosek(sort(unique(1:numChans),'ascend'),2);
 pairNum      = size(chanPairNums,1);
 
-% Extract words times
-day1MarkerPath = 'E:\data\PLI\delta\Verbal\MARKERS_day1.mat';
-load(day1MarkerPath, 'lbl_words');
-load(day1MarkerPath, 'lbl_alphabet');
-load(day1MarkerPath, 'lbl_numbers');
-load(day1MarkerPath, 'good_words');
-load(day1MarkerPath, 'pts_words');
-
-listWord = lbl_words; clear lbl_words;
-listABC = lbl_alphabet; clear lbl_Alphabet;
-listNum = lbl_numbers; clear lbl_numbers;
-timeIdxAvail = good_words; clear good_words;
-timeStampAvail = pts_words; clear pts_words;
-
-idxCell = strfind(listWord, word);
-idxWord = find(not(cellfun('isempty', idxCell)));
-
-timeIdx = timeIdxAvail{idxWord};
-timeStamp = timeStampAvail{idxWord}(timeIdx);
-timeBounds = [timeStamp(:) - Fs*1 , timeStamp(:) + Fs*1.5];
-
-params.timeBounds = timeBounds;
-params.eventMarker = 1;
+% % Extract words times
+% day1MarkerPath = 'E:\data\PLI\delta\Verbal\MARKERS_day1.mat';
+% load(day1MarkerPath, 'lbl_words');
+% load(day1MarkerPath, 'lbl_alphabet');
+% load(day1MarkerPath, 'lbl_numbers');
+% load(day1MarkerPath, 'good_words');
+% load(day1MarkerPath, 'pts_words');
+% 
+% listWord = lbl_words; clear lbl_words;
+% listABC = lbl_alphabet; clear lbl_Alphabet;
+% listNum = lbl_numbers; clear lbl_numbers;
+% timeIdxAvail = good_words; clear good_words;
+% timeStampAvail = pts_words; clear pts_words;
+% 
+% idxCell = strfind(listWord, word);
+% idxWord = find(not(cellfun('isempty', idxCell)));
+% 
+% timeIdx = timeIdxAvail{idxWord};
+% timeStamp = timeStampAvail{idxWord}(timeIdx);
+% timeBounds = [timeStamp(:) - Fs*1 , timeStamp(:) + Fs*1.5];
+% 
+% params.timeBounds = timeBounds;
+% params.eventMarker = 1;
 
 % Calculate Number of Windows
 dataLen = Fs * 2.5;
@@ -116,21 +123,27 @@ winNum  = floor(dataLen / (winSize * Fs));
 % rawWin = permute(reshape(permute(data(:,1:winNum*winSize*Fs)', [1,3,2]), (winSize * Fs),winNum,numChans), [2,1,3]);
 % Extract data for selected channels
 
-rawWin = zeros(winNum, winSize*Fs, numChans, size(timeBounds,1));
+% load(filePath);
+numTrials = size(bandData,3);
+rawWin = zeros(winNum, winSize*Fs, numChans, size(bandData,3));
 
-for ii = 1:size(timeBounds,1)
-    nsxData = openNSx(filePath, 'read', ['c:', num2str(chanProcess(1)), ':', num2str(chanProcess(end))], ['t:', num2str(timeBounds(ii,1)), ':', num2str(timeBounds(ii,2))]);
-    
-    tmpDataLen = size(nsxData.Data,2);
-    if tmpDataLen ~= winNum*winSize*Fs
-        nsxData.Data = nsxData.Data(:, 1:(winNum*winSize*Fs));
-    end
-    
-    tmpRawWin = permute(reshape(permute(nsxData.Data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
+% rawWin = permute(reshape(permute(bandData(1:floor(winNum*winSize*Fs),:,:), [1,2,3]), floor(winSize * Fs), winNum, numChans, size(bandData,3)), [2,1,3,4]);
+rawWin = permute(reshape(bandData(1:floor(winNum*winSize*Fs),:,:), floor(winSize * Fs), winNum, numChans, numTrials), [2,1,3,4]);
 
-    rawWin(:,:,:,ii) = tmpRawWin;
-end
-params.dataSize = winNum*winSize*Fs;
+
+% for ii = 1:size(timeBounds,1)
+%     nsxData = openNSx(filePath, 'read', ['c:', num2str(chanProcess(1)), ':', num2str(chanProcess(end))], ['t:', num2str(timeBounds(ii,1)), ':', num2str(timeBounds(ii,2))]);
+%     
+%     tmpDataLen = size(nsxData.Data,2);
+%     if tmpDataLen ~= winNum*winSize*Fs
+%         nsxData.Data = nsxData.Data(:, 1:(winNum*winSize*Fs));
+%     end
+%     
+%     tmpRawWin = permute(reshape(permute(nsxData.Data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
+% 
+%     rawWin(:,:,:,ii) = tmpRawWin;
+% end
+% params.dataSize = winNum*winSize*Fs;
 
 
 deltaPhi = 0;
@@ -139,8 +152,8 @@ smp = 0;
 % initialize variables
 if surrFlag
     % Set up PLI and R variables
-    pli = zeros(winNum, pairNum, surrNum+1);
-    r   = zeros(winNum, pairNum, surrNum+1);
+    pli = zeros(winNum, pairNum, surrNum+1, numTrials);
+    r   = zeros(winNum, pairNum, surrNum+1, numTrials);
     
     % for surrogate data: random phase shift applied to each channel
     smp = [zeros(pairNum,1) round(Fs)/2 + round(round(Fs)*rand(pairNum,surrNum))]; % 500-1000 samples (0.5 - 1.0 seconds)
@@ -150,10 +163,10 @@ if surrFlag
     end % END IF rawPhiFlag
     
 else
-    pli = zeros(winNum, pairNum, 1);
+    pli = zeros(winNum, pairNum, 1, numTrials);
     
     % stats
-    r   = zeros(winNum, pairNum, 1);
+    r   = zeros(winNum, pairNum, 1, numTrials);
     
     if statsFlag
         binEdge = [-pi:pi/100:pi];
@@ -207,7 +220,7 @@ timeWatch = tic;
 save(filePathOut,'chanPairNums','Header', 'params','-v7.3');
 
 % For each word trial
-for wt = 1:size(timeBounds,1)
+for wt = 1:numTrials
     % For each channel pair
     for cp = 1:pairNum
         
@@ -270,8 +283,8 @@ for wt = 1:size(timeBounds,1)
             %%
         end % END IF surrFlag
         
-        p(:,cp, wt) = tmpp;
-        r(:,cp, wt) = tmpr;
+        p(:,cp, 1,wt) = tmpp;
+        r(:,cp, 1,wt) = tmpr;
         %     eval(['P', num2str(cp), ' = tmpp;']);
         %     eval(['R', num2str(cp), ' = tmpp;']);
         
@@ -305,7 +318,7 @@ for wt = 1:size(timeBounds,1)
                 fprintf('Time Spent: %f\n', timeSpent)
                 fprintf('Time Spent Per Pair: %f\n', timeSpent/cp)
                 fprintf('Time Left: %f\n', (timeSpent/cp)*(pairNum-cp))
-                fprintf('Word Trial: %d/%d\n', wt, size(timeBounds,1))
+                fprintf('Word Trial: %d/%d\n', wt, numTrials)
             end % END IF
         end % END IF surrFlag
         
