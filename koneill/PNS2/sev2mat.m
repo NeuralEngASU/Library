@@ -32,18 +32,19 @@ allowedFormats = {'single','int32','int16','int8','double','int64'};
 headerCount = 0;
 
 % Extract the filename for the data.
-exprStr = '([A-Za-z0-9\_]+)\.[sev]';
-fileName = regex(fileList(1).name, exprStr, 'Match');
+exprStr = '([A-Za-z0-9\_]+)\_DSP[0-9]\_Ch[0-9]\.[sev]';
+fileName = regexp(fileList(1).name, exprStr, 'Tokens');
+fileName = fileName{1};
 
 if isempty(targetDir)
     outPath = fullfile(targetDir, [fileName, '.mat']);
 end % END IF isempty(targetDir)
 
-% Extract data
+%% Extract data
 for ii = 1:length(fileList)
 
     filePath = fullfile(sourceDir, fileList(ii).name);
-    FID = fread(filePath, 'rb');
+    FID = fopen(filePath, 'rb');
     
     if FID < 0
         warning(['Cannot open: ' filePath])
@@ -53,34 +54,34 @@ for ii = 1:length(fileList)
     % create and fill tmpHeader struct
     tmpHeader = [];
     
-    tmpHeader.fileSizeBytes = fread(fid,1,'uint64');
-    tmpHeader.fileType      = char(fread(fid,3,'char')');
-    tmpHeader.fileVersion   = fread(fid,1,'char');
+    tmpHeader.fileSizeBytes = fread(FID,1,'uint64');
+    tmpHeader.fileType      = char(fread(FID,3,'char')');
+    tmpHeader.fileVersion   = fread(FID,1,'char');
        
     % Extrct Header information
     if tmpHeader.fileVersion < 3
         % Event name
         if tmpHeader.fileVersion == 2 
-            tmpHeader.eventName  = char(fread(fid,4,'char')');
+            tmpHeader.eventName  = char(fread(FID,4,'char')');
         else
-            tmpHeader.eventName  = fliplr(char(fread(fid,4,'char')'));
+            tmpHeader.eventName  = fliplr(char(fread(FID,4,'char')'));
         end % END IF fileVersion
         
-        tmpHeader.channel     = fread(fid, 1, 'uint16'); % Current channel
-        tmpHeader.numChan     = fread(fid, 1, 'uint16'); % Number of channels
-        tmpHeader.numByteSamp = fread(fid, 1, 'uint16'); % Number of bytes per sample
-        reserved              = fread(fid, 1, 'uint16'); % Reserved segment
+        tmpHeader.channel     = fread(FID, 1, 'uint16'); % Current channel
+        tmpHeader.numChan     = fread(FID, 1, 'uint16'); % Number of channels
+        tmpHeader.numByteSamp = fread(FID, 1, 'uint16'); % Number of bytes per sample
+        reserved              = fread(FID, 1, 'uint16'); % Reserved segment
         
         % Data format in lower four bits
-        tmpHeader.dataFormat = allowedFormats{bitand(fread(fid, 1, 'uint8'),7)+1};
+        tmpHeader.dataFormat = allowedFormats{bitand(fread(FID, 1, 'uint8'),7)+1};
         
         % Items used to calculate Fs
-        tmpHeader.decimate   = fread(fid, 1, 'uint8');
-        tmpHeader.rate       = fread(fid, 1, 'uint16');
+        tmpHeader.decimate   = fread(FID, 1, 'uint8');
+        tmpHeader.rate       = fread(FID, 1, 'uint16');
         
         % Reserved tags
-        reserved = fread(fid, 1, 'uint64');
-        reserved = fread(fid, 2, 'uint16');
+        reserved = fread(FID, 1, 'uint64');
+        reserved = fread(FID, 2, 'uint16');
     
     else
         error(['Unknown file version: ' num2str(tmpHeader.fileVersion)]);
@@ -89,7 +90,7 @@ for ii = 1:length(fileList)
     % Determine sampling rate
     if tmpHeader.fileVersion > 0
         tmpHeader.Fs = 2^(tmpHeader.rate)*25000000/2^12/tmpHeader.decimate;
-        exists = isfield(tmpData, streamHeader.eventName);
+%         exists = isfield(tmpData, streamHeader.eventName);
     else
         tmpHeader.dForm = 'single';
         tmpHeader.Fs = 0;
@@ -98,7 +99,7 @@ for ii = 1:length(fileList)
         tmpHeader.channelNum = str2double(regexp(s{end}, '\d+', 'match'));
         warning('%s has empty header; assuming %s ch %d format %s and fs = %.2f\nupgrade to OpenEx v2.18 or above\n', ...
             file_list(ii).name, tmpHeader.eventName, ...
-            tmpHeader.channelNum, tmpHeader.dForm, 24414.0625);
+            tmpHeader.channelNum, tmpHeader.dataFormat, 24414.0625);
         
         exists = 1;
         %data.(tmpHeader.eventName).fs = tmpHeader.fs;
@@ -115,13 +116,14 @@ for ii = 1:length(fileList)
         headerCount = 1;        
     end % END headerCount == 0
     
-    tmpData = fread(fid, inf, ['*' tmpHeader.dForm])'; % Read data from file
+    tmpData = fread(FID, inf, ['*' tmpHeader.dataFormat])'; % Read data from file
 
     varName = ['C', num2str(ii)]; % Name the channel variable
     eval([varName '=tmpData;']); % Set the channel variable to tmpData
     
     save(outPath, varName, '-append') % Save the channel variable
-    
-end % END FUNCTION
+ 
+end % END FOR
+% end % END FUNCTION
 
 % EOF
