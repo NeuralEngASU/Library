@@ -19,7 +19,7 @@ if isempty(sourceDir)
     sourceDir = uigetdir('', 'Select Tank Folder');
 end % END IF isempty(sourceDir)
 
-fileList = dir(fullfile(sourceDir, '*.m'));
+fileList = dir(fullfile(sourceDir, '*.sev'));
 
 if length(fileList) < 1
     warning(['No .sev files found in: ', sourceDir])
@@ -32,7 +32,7 @@ allowedFormats = {'single','int32','int16','int8','double','int64'};
 headerCount = 0;
 
 % Extract the filename for the data.
-exprStr = '([A-Za-z0-9\_]+)\.[mat]';
+exprStr = '([A-Za-z0-9\_]+)\.[sev]';
 fileName = regex(fileList(1).name, exprStr, 'Match');
 
 if isempty(targetDir)

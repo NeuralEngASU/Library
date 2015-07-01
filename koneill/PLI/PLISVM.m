@@ -73,7 +73,7 @@ for jj = 1:size(uniqueTrials,2)
 %     tmpDataP = reshape(tmpDataP, size(tmpDataP,1)*size(tmpDataP,2), 1,size(tmpDataP,3));
 %     tmpDataP = reshape(tmpDataP, size(tmpDataP,1), size(tmpDataP,3))';
 
-    tmpDataP = squeeze(p(:,:,:,trainTrial{jj}));
+    tmpDataP = squeeze(p(:,:,:,testTrial{jj}));
     tmpDataP = reshape(tmpDataP, 25*size(tmpDataP,2), 1,size(tmpDataP,3));
     tmpDataP = reshape(tmpDataP, size(tmpDataP,1), size(tmpDataP,3))';
 
@@ -125,15 +125,33 @@ for jj = 1:size(uniqueTrials,2)
     
 end % END FOR uniqueTrials
 
-% trainMapP  = trainMapP.^2;
+
+% Randomly sort the rows and columns
+rowSortTrain = [1:size(trainMapP,1)];
+rowSortTest = [1:size(testMapP,1)];
+colSort = [1:size(trainMapP,2)];
+
+rowSortTrain = rowSortTrain(randperm(length(rowSortTrain)));
+rowSortTest = rowSortTest(randperm(length(rowSortTest)));
+colSort = colSort(randperm(length(colSort)));
+
+classMapTrainP = classMapTrainP(rowSortTrain);
+trainMapP = trainMapP(rowSortTrain,:);
+trainMapP = trainMapP(:,colSort);
+
+classMapTestP = classMapTestP(rowSortTest);
+testMapP = testMapP(rowSortTest,:);
+testMapP = testMapP(:,colSort);
+
+trainMapP  = trainMapP.^2;
 % trainMapR  = trainMapR.^2;
 % trainMapPR = trainMapPR.^2;
-% 
-% testMapP  = testMapP.^2;
+
+testMapP  = testMapP.^2;
 % testMapR  = testMapR.^2;
 % testMapPR = testMapPR.^2;
 
-%% Feature Selection
+%% Parameter Selection
 % Automatic Cross Validation 
 % Parameter selection using n-fold cross validation
 
@@ -172,27 +190,37 @@ while abs(deltacv) > epsilon
 end
 disp(['The best parameters, yielding Accuracy=',num2str(bestcv*100),'%, are: C=',num2str(bestc),', gamma=',num2str(bestg)]);
 
-% Best params for full time series (43.5% accuracy): C = 64; gamma = 0.00048828;
+% Best params for full time series (43.5% accuracy): bestc = 64; bestg = 0.00048828;
 % Best params for full Mean/Diff/Max (41.6% accuracy): C = 0.35355; gamma = 0.0027621;
 
 
-%% SVM Train
+%% SVM Train (LibSVM)
     
 % svmModelP  = svmtrain(classMapTrainP,  trainMapP);
 % svmModelR  = svmtrain(classMapTrainR,  trainMapR);
 % svmModelPR = svmtrain(classMapTrainPR, trainMapPR);
 cmd = ['-q -c ', num2str(2^bestc), ' -g ', num2str(2^bestg)];
-svmModelP  = ovrtrain(classMapTrainP,  trainMapP, cmd);
+svmModelP  = ovrtrain(classMapTrainP,  trainMapP', cmd);
 % svmModelR  = ovrtrain(classMapTrainR,  trainMapR, cmd);
 % svmModelPR = ovrtrain(classMapTrainPR, trainMapPR, cmd);
 
-%% SVM Predict
+%% SVM Predict (LibSVM)
 
 % [predictClassP, accP, probP]  = svmpredict(classMapTestP,  testMapP, svmModelP);
 % [predictClassP]  = svmpredict(classMapTestP,  testMapP, svmModelP);
 % [predictClassR]  = svmpredict(classMapTestR,  testMapR, svmModelR);
 % [predictClassPR] = svmpredict(classMapTestPR,  testMapPR, svmModelPR);
 
-[label_out, acc_out, decv_out] = ovrpredictBot(classMapTestP, testMapP, svmModelP);
+[label_out, acc_out, decv_out] = ovrpredictBot(classMapTestP, testMapP', svmModelP);
+
+%% SVM Train (MATLAB)
+
+t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',64, 'KernelScale', 0.00048828);
+Mdl = fitcecoc(trainMapP, classMapTrainP, 'Learners', t, 'Coding', 'onevsone');
+
+
+% SVM Predict (MATLAB)
+predicted = predict(Mdl, testMapP);
+acc = sum(predicted == classMapTestP)/numel(predicted)
 
 % EOF

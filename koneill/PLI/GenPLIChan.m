@@ -59,9 +59,9 @@ fprintf('Loading Data: %s\n', filePath)
 fprintf('Data Size: %f MB\n',sizeFile)
 
 %% Parse variables
-% load(filePath, '-mat');
-Header = openNSx(filePath);
-Header = Header.MetaTags;
+load(filePath, '-mat');
+% Header = openNSx(filePath);
+% Header = Header.MetaTags;
 
 % % Biploar
 % if biPolarFlag
@@ -76,24 +76,28 @@ Header = Header.MetaTags;
 % end % END IF globalFlag
 
 % Find the number of channels
-numChans = size(chanProcess,1);
+% numChans = size(chanProcess,1);
+numChans = size(data,1);
+chanProcess = [1:numChans]';
+params.chanProcess = chanProcess;
 
 % Set up channel parings
 chanPairNums = nchoosek(sort(unique(1:numChans),'ascend'),2);
 pairNum      = size(chanPairNums,1);
 
 % Calculate Number of Windows
-dataLen = Header.DataPoints;
+% dataLen = Header.DataPoints;
+dataLen = size(data,2);
 winNum  = floor(dataLen / (winSize * Fs));
 
 % Seperate Data into Windows
 % winNum x windowed Data x channel
 % rawWin = permute(reshape(permute(data(:,1:winNum*winSize*Fs)', [1,3,2]), (winSize * Fs),winNum,numChans), [2,1,3]);
 % Extract data for selected channels
-nsxData = openNSx(filePath, 'read', ['c:', num2str(chanProcess(1)), ':', num2str(chanProcess(end))], ['t:1:', num2str(winNum*winSize*Fs)]);
+% nsxData = openNSx(filePath, 'read', ['c:', num2str(chanProcess(1)), ':', num2str(chanProcess(end))], ['t:1:', num2str(winNum*winSize*Fs)]);
 
-rawWin = permute(reshape(permute(nsxData.Data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
-
+% rawWin = permute(reshape(permute(nsxData.Data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
+rawWin = permute(reshape(permute(data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
 
 
 deltaPhi = 0;
