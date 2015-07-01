@@ -1,23 +1,29 @@
-classdef Vicon < handle
-    properties
-        m_udp;
-        pointsMat;
-        oldPoints;
-    end % END PROPERTIES
-    
-    methods
-        function m_obj = Vicon()
-        end % END FUNCTION
-        function GetPoints(obj)
-            
-            obj.pointsMat = zeros(5,4);
-        end % END FUNCTION
-        
-        function init(obj)
-            obj.pointsMat = zeros(5,4);
-            obj.oldPoints = zeros(5,4);
-%             m_udp = 
-        end % END FUNCTION
-    end % END METHODS
-end % END CLASS
+% Handle Vicon data stream
+
+%% Setup
+
+dllLoc = '';
+NET.addAssembly(dllLoc);
+
+vicon = NetThread.init();
+Vicon.SetIP('128.0.0.1');
+Vicon.SetPort(9090);
+
+Vicon.StartThread();
+
+points = zeros(26,3); % 3 coords for each marker.
+angles = zeros(7,4);  % Thumb, Index, Middle, Ring, Little, Right Orient, Left Orient
+loc = zeros(2,3);     % Right Loc, Left Loc
+
+for ii = 1:100
+%% Get Points
+points = Vicon.GetPoints();
+
+%% Process Data
+[angles, loc] = Points2Angles(points);
+
+%% Send Angles
+
+end %END FOR
+
 % EOF
