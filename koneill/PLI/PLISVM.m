@@ -2,6 +2,7 @@
 % Use SVM to classify PLI
 
 %% Seperate the training and test group
+load('E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData_PLI_winSize0.1.mat')
 
 trainRatio = 0.5; % The ratio of trials to train from
 
@@ -11,7 +12,7 @@ rng(1); % For reproducibility
 
 for ii = 1:size(uniqueTrials,2)
     
-    logicalMat = logical(zeros(1, size(Header.class,2)));
+    logicalMat = false(1, size(Header.class,2));
     numTrials = sum(Header.class == uniqueTrials(ii));
     trialIdx = find(Header.class == uniqueTrials(ii));
     
@@ -215,12 +216,12 @@ svmModelP  = ovrtrain(classMapTrainP,  trainMapP', cmd);
 
 %% SVM Train (MATLAB)
 
-t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',64, 'KernelScale', 0.00048828);
-Mdl = fitcecoc(trainMapP, classMapTrainP, 'Learners', t, 'Coding', 'onevsone');
+t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',bestc, 'KernelScale', bestg);
+Mdl = fitcecoc(trainMapP', classMapTrainP, 'Learners', t, 'Coding', 'onevsone');
 
 
 % SVM Predict (MATLAB)
-predicted = predict(Mdl, testMapP);
+predicted = predict(Mdl, testMapP');
 acc = sum(predicted == classMapTestP)/numel(predicted)
 
 % EOF

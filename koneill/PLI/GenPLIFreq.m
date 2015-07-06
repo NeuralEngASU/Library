@@ -49,11 +49,13 @@ fprintf('Data Size: %f MB\n',sizeFile)
 %% Load data
 load(filePath, '-mat');
 
+data = bandData;
+clear bandData;
 % Biploar
 %if biPolarFlag
-    data2 = data(1:2:end,:) - data(2:2:end,:);
-    data = data2;
-    clear data2
+%     data2 = data(1:2:end,:) - data(2:2:end,:);
+%     data = data2;
+%     clear data2
 % end % END IF
 
 % Find the number of channels

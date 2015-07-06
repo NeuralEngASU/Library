@@ -13,11 +13,13 @@ bands = [ 1,   4;... % Delta Band
 
 bandNames = {'Delta', 'Theta', 'Alpha', 'Beta', 'Gamma', 'Chi'};
 
-% parpool(12)
+parpool(16)
 
 Apass =  1; % dB, Passband attenuation
-Astop1 = 20; % dB, Stopband attenuation
-Astop2 = 20; % dB, Stopband attenuation
+Astop1 = 60; % dB, Stopband attenuation
+Astop2 = 60; % dB, Stopband attenuation
+order = 20; % The order of the filter
+match  = 'both';  % Band to match exactly
 
 % bandData = zeros(size(data,1), size(data,2), size(data,3));
 
@@ -26,7 +28,7 @@ Header.bandNames = bandNames;
 Header.class = class;
 Header.Fs = 5000;
 Header.filtType = 'butter';
-Header.filtOrder = 60;
+Header.stopBand = 0.9;
 %%
 timeClock = tic;
 
@@ -35,19 +37,27 @@ for b = 1:size(bands,1)
 
     Header.currentBand = b;
     
-    Fstop1 = bands(b,1)-.2;
-    Fstop2 = bands(b,2)+0.2;
+    Fstop1 = bands(b,1)-0.9;
+    Fstop2 = bands(b,2)+0.9;
+    
+    Fpass1 = bands(b,1);
+    Fpass2 = bands(b,2);
     
     for t = 1:numTrial
         
-        d = fdesign.bandpass('N,F3dB1,F3dB2',60,Fstop1,Fstop2,5000);
-        Hd = design(d,'butter'); %fvtool(Hd)
+        % Construct an FDESIGN object and call its ELLIP method.
+        h  = fdesign.bandpass(Fstop1, Fpass1, Fpass2, Fstop2, Astop1, Apass, Astop2, Header.Fs);
+        Hd = design(h, 'ellip', 'MatchExactly', match);
+%         d = fdesign.bandpass('N,F3dB1,F3dB2',60,Fstop1,Fstop2,5000);
+%         Hd = design(d,'ellip'); %fvtool(Hd)
         parfor c = 1:numChan
-            d = fdesign.bandpass('N,F3dB1,F3dB2',60,Fstop1,Fstop2,5000);
-            Hd = design(d,'butter'); %fvtool(Hd)
+            h  = fdesign.bandpass(Fstop1, Fpass1, Fpass2, Fstop2, Astop1, Apass, Astop2, Header.Fs);
+            Hd = design(h, 'ellip', 'MatchExactly', match);
+%             d = fdesign.bandpass('N,F3dB1,F3dB2',60,Fstop1,Fstop2,5000);
+%             Hd = design(d,'ellip'); %fvtool(Hd)
             % h=fdesign.bandpass('Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2', Fstop1, Fpass1, Fpass2, Fstop2, Astop1, Apass, Astop2);
             % Hd=design(h, 'butter');
-            bandData(:,c,t)=filtfilt(Hd.sosMatrix,Hd.ScaleValues,data(:,c,t));
+            bandData(:,c,t) = filtfilt(Hd.sosMatrix,Hd.ScaleValues,data(:,c,t));
         end
         timeElap = toc(timeClock);
         

@@ -48,7 +48,7 @@ trainRatio = 0.5; % Ratio of trials used for training
 
 tmpData = [];
 
-filesTrain = 1:2;
+filesTrain = 3:5;%1:2;
 filesTest = 3:5;
 
 % Sz Data
@@ -58,7 +58,7 @@ szList = dir([inputPLISz, '\*.mat']);
 % szFiles = szList.name;
 
 load(fullfile(inputPLISz, szList(1).name))
-tmpData = [tmpData; p'; r'];
+tmpData = [tmpData, [p(301:420,:)'; r(301:420,:)']];
 end % Sz
 
 trainData = tmpData;
@@ -72,12 +72,12 @@ nonszList = dir([inputPLINonSz, '\*.mat']);
 % szFiles = szList.name;
 
 load(fullfile(inputPLINonSz, nonszList(1).name))
-tmpData = [tmpData; p'; r'];
+tmpData = [tmpData, [p(301:420,:)'; r(301:420,:)']];
 end % END FOR NonSz
 trainData = [trainData,tmpData];
 classLabels = [classLabels; zeros(size(tmpData,2),1)];
 
-classLabels = [ones(600,1); zeros(600,1)];
+classLabels = [ones(360,1); zeros(360,1)];
 
 %% Randomize Columns and Rows
 
@@ -134,7 +134,7 @@ while abs(deltacv) > epsilon
 end
 disp(['The best parameters, yielding Accuracy=',num2str(bestcv*100),'%, are: C=',num2str(bestc),', gamma=',num2str(bestg)]);
 
-% Best params for full time series (43.5% accuracy): bestc = 0.0020; bestg = 4.8828e-04;
+% Best params for full time series (43.5% accuracy): bestc =  2048; bestg = 0.0028;
 
 %% Mold Data
 
@@ -142,7 +142,8 @@ disp(['The best parameters, yielding Accuracy=',num2str(bestcv*100),'%, are: C='
 
 %% Test SVM
 
-cmd = ['-q -c ', num2str(2^bestc), ' -g ', num2str(2^bestg)];
+% cmd = ['-q -c ', num2str(2^bestc), ' -g ', num2str(2^bestg)];
+cmd = ['-q -c ', num2str(bestc), ' -g ', num2str(2^bestg)];
 svmModelP  = ovrtrain(classLabels,  trainData', cmd);
 
 %% SVM Predict (LibSVM)
