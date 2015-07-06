@@ -16,9 +16,9 @@
 %% Initialize variables
 
 startTime = ''; % Leave empty if the activeX system works. Else insert the start time of the block you want to extract
-timeOfInterest = '12:04:53'; % The time (in real time) of interest. Uses 24hr time
+timeOfInterst = '10:00:00'; % The time (in real time) of interest. Uses 24hr time
 
-timeBounds = [-.03, .03]; % Extract data +/- 5 minutes around the timeOfInterest
+timeBounds = [-5, 5]; % Extract data +/- 5 minutes around the timeOfInterest
 
 sourceDir = ''; % The source directory of the *.sev files (block)
 targetDir = ''; % The location where you want to save the extracted data
@@ -38,81 +38,70 @@ end % END IF isempty(targetDir)
 
 %% Load tank/block time information
 
-if isempty(startTime)
-    tsqList =  dir(fullfile(sourceDir, '*.tsq'));
-
-    if isempty(tsqList)
-        error('Cannot find block data in source directory.');
-    end % END IF isempty(tsqList)
+if ~isempty(startTime)
+    server = 'Local';
     
-    % Open Block data file
-    tsq = fopen(fullfile(sourceDir, tsqList(1).name), 'r');
+    % create TTankX object
+    h = figure('Visible', 'off', 'HandleVisibility', 'off');
+    TTX = actxcontrol('TTank.X', 'Parent', h);
     
-    % allocate variables
-    tsqStartTimeStamp = 0;
-    tsqStopTimeStamp = 0;
-    discard = 0;
-    count = 0;
+    % connect to server
+    if TTX.ConnectServer(SERVER, 'TDT2mat') ~= 1
+        close(h)
+        error(['Problem connecting to server: ' SERVER])
+    end
     
-    % Find the first initialized startTime
-    while (tsqStartTimeStamp == 0 || count >=100)
-        discard = fread(tsq, 1, 'long');
-        discard = fread(tsq, 1, 'long');
-        discard = fread(tsq, 1, 'long');
-        discard = fread(tsq, 1, 'uint16');
-        discard = fread(tsq, 1, 'uint16');
-        tsqStartTimeStamp = fread(tsq, 1, 'double');
-        discard = fread(tsq, 1, 'uint64');
-        discard = fread(tsq, 1, 'long');
-        discard = fread(tsq, 1, 'float');
-        
-        count = count+1;
-    end % END WHILE tsqTimeStamp
+    % open tank
+    if TTX.OpenTank(tank, 'R') ~= 1
+        TTX.ReleaseServer;
+        close(h);
+        error(['Problem opening tank: ' tank]);
+    end
     
-    % Go to the start of the last timestamp
-    fseek(tsq, -24, 'eof');
+    % select block
+    if TTX.SelectBlock(['~' block]) ~= 1
+        block_name = TTX.QueryBlockName(0);
+        block_ind = 1;
+        while strcmp(block_name, '') == 0
+            block_ind = block_ind+1;
+            block_name = TTX.QueryBlockName(block_ind);
+            if strcmp(block_name, block)
+                error(['Block found, but problem selecting it: ' block]);
+            end
+        end
+        error(['Block not found: ' block]);
+    end
     
-    % Extract the last timestamp
-    tsqStopTimeStamp = fread(tsq, 1, 'double');
-        
-    fclose(tsq);
-   
-    timeRef = datenum('1970', 'yyyy'); % Setup a reference date (Jan-1 1970)
-    startTimeMatlab = timeRef + tsqStartTimeStamp / 8.64e4; % Convert the tsqStartTimeStamp into days and add the days to the reference date
-    startTimeMatlab = startTimeMatlab - 7/24; % Arizona time is GMT-7:00
-    startTimeMatlabString = datestr(startTimeMatlab, 'yyyymmdd HH:MM:SS'); % Convert to string
+    % set info fields
+    startTime = TTX.CurBlockStartTime;
+    stopTime = TTX.CurBlockStopTime;
+    total = stopTime-startTime;
     
-    stopTimeMatlab = timeRef + tsqStopTimeStamp / 8.64e4; % Convert the tsqStopTimeStamp into days and add the days to the reference date
-    stopTimeMatlab = stopTimeMatlab - 7/24; % Arizona time is GMT-7:00
-    stopTimeMatlabString = datestr(stopTimeMatlab, 'yyyymmdd HH:MM:SS'); % Convert to string
-    
-    duration = stopTimeMatlab - startTimeMatlab;
-    durationString = datestr(duration, 'HH:MM:SS');
-    
-    Header.dateStart = startTimeMatlabString(1:8);
-    Header.dateStop = stopTimeMatlabString(1:8);
-    Header.startTime = startTimeMatlabString(10:end);
-    Header.stopTime = stopTimeMatlabString(10:end);
-    Header.duration = durationString;
+    Header.tankPath = TTX.GetTankItem(tank, 'PT');
+    Header.date = TTX.FancyTime(startTime, 'Y-O-D');
+    Header.startTime = TTX.FancyTime(startTime, 'H:M:S');
+    Header.stopTime = TTX.FancyTime(stopTime, 'H:M:S');
+    if stopTime > 0
+        Header.duration = TTX.FancyTime(total, 'H:M:S');
+    else
+    Header.duration = -1;
+    end
 else
-    Header.dateStart = '';
-    Header.dateStop = '';
     Header.startTime = startTime;
     Header.stopTime = -1;
     Header.duration = -1;
+    Header.tankPath = '';
+    Header.date = '';
 end % END IF
 
 Header.tank = tank;
 Header.block = block;
 
 Header.timeBounds = timeBounds;
-Header.timeOfInterest = timeOfInterest;
+Header.timeOfInterst = timeOfInterest;
 
-Header.tankBlockPath = sourceDir;
 Header.sourceDir = sourceDir;
 Header.targetDir = targetDir;
-
-startTime = Header.startTime;
 
 %% Compute number of seconds between startTime and timeOfInterest
 
@@ -168,19 +157,20 @@ end % END IF length(fileList) < 1
 
 % List of allowed formats
 allowedFormats = {'single','int32','int16','int8','double','int64'};
-allowedFormatsSize = [16, 32, 16, 8, 32, 64];
+
 % Output the Header once to a .mat file
 headerCount = 0;
 
 % Extract the filename for the data.
 exprStr = '([A-Za-z0-9\_]+)\_DSP[0-9]\_Ch[0-9]\.[sev]';
 fileName = regexp(fileList(1).name, exprStr, 'Tokens');
-fileName = fileName{1}{1};
+fileName = fileName{1};
 
-outputName = [fileName, '.mat'];
-outputPath = fullfile(targetDir, outputName);
+if isempty(targetDir)
+    outPath = fullfile(targetDir, [fileName, '.mat']);
+end % END IF isempty(targetDir)
 
-filePath = fullfile(sourceDir, fileList(1).name);
+filePath = fullfile(sourceDir, fileList(ii).name);
 FID = fopen(filePath, 'rb');
 
 if FID < 0
@@ -223,8 +213,6 @@ else
     error(['Unknown file version: ' num2str(tmpHeader.fileVersion)]);
 end % END IF fileVersion
 
-fclose(FID);
-
 % Determine sampling rate
 if tmpHeader.fileVersion > 0
     tmpHeader.Fs = 2^(tmpHeader.rate)*25000000/2^12/tmpHeader.decimate;
@@ -257,8 +245,7 @@ Header.numChan = length(fileList);
 Header.numSamp = numSamp;
 Header.numSampSegment = diff(time2Extract)*Header.Fs;
 Header.dataFormat = 'double';
-Header.outputPath = outputPath;
-Header.outputName = outputName;
+Header.outputPath = tmpHeader.outputPath;
 
 %% Extract data
 for ii = 1:length(fileList)
@@ -309,25 +296,18 @@ for ii = 1:length(fileList)
     
     % Save Header to file/Create save file
     if headerCount == 0
-        save(outputPath, 'Header', '-v7.3')
+        save(outPath, 'Header', '-v7.3')
         headerCount = 1;
     end % END headerCount == 0
     
-    for kk = 1:size(allowedFormats,2)
-        
-        if strcmp(tmpHeader.dataFormat, allowedFormats{kk})
-            numByte = allowedFormatsSize(kk);
-        end % END IF
-        
-    end % END FOR
     % fseek to the start of the segment of interest
-    fseek(FID, floor(time2Extract(1)*Header.Fs) * numByte , 'bof');
+    fseek(FID, time2Extract(1)*Header.Fs, ['*' tmpHeader.dataFormat]);
     tmpData = fread(FID, diff(time2Extract)*Header.Fs, ['*' tmpHeader.dataFormat])'; % Read data from file
     
     varName = ['C', num2str(ii)]; % Name the channel variable
     eval([varName '=tmpData;']); % Set the channel variable to tmpData
     
-    save(outputPath, varName, '-append') % Save the channel variable
+    save(outPath, varName, '-append') % Save the channel variable
     
     clear(varName);
     
