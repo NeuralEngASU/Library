@@ -93,9 +93,9 @@ end % END FOR
 
 %% Delta Bands + Original
 
-% fileList{1} = {'E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData.mat'};
+fileList{1} = {'E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData.mat'};
 % fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Alpha.mat'};
-fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Beta.mat'};
+% fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Beta.mat'};
 % fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Chi.mat'};
 % fileList{2} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Delta.mat'};
 % fileList{3} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Gamma.mat'};

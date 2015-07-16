@@ -50,7 +50,7 @@ end % END IF statsFlag
 
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '_rawPhi.mat']);
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '.mat']);
-filePathOut = [filePathOut, '_PLI_winSize', num2str(winSize), '.mat'];
+filePathOut = [filePathOut, '_WPLI_winSize', num2str(winSize), '.mat'];
 
 %% Give User Feedback
 fprintf('******************************************************************\n')
@@ -65,7 +65,7 @@ load(filePath);
 
 if ~exist('Header', 'var')
     Header.Fs = 5000;
-    Header.class = class;
+%     Header.class = class;
     bandData = data(2501:15000,:,:);
 else
     Fs = Header.Fs;
@@ -270,9 +270,9 @@ for wt = 1:numTrials
             
             if rawPhiFlag
                 tmpDeltaPhi = nan(winNum, 1,(winSize*Fs));
-                [tmpp(:,1),tmpr(:,1), tmpDeltaPhi(:,1,:)] = pli2(raw1, raw2);
+                [tmpp(:,1),tmpr(:,1), tmpDeltaPhi(:,1,:)] = wpli(raw1, raw2);
             else
-                [tmpp(:,1),tmpr(:,1),tmpDeltaPhi(:,1,:)]=pli2(raw1, raw2);
+                [tmpp(:,1),tmpr(:,1),tmpDeltaPhi(:,1,:)]=wpli(raw1, raw2);
             end % END IF rawPhiFlag
             
             if statsFlag

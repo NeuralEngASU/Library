@@ -1483,6 +1483,8 @@ ylim([0, .5*params.Fs])
 filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
 Fs = Header.Fs;
 desClass = 1;
+% load('E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData_WPLI_winSize0.1.mat')
+%     p = p.^2;
 
 for kk = 1:16
     refChan = kk;
@@ -1495,6 +1497,8 @@ for kk = 1:16
     for jj = 1:size(desiredChanPairs,1)
         idx = idx | ((chanPairNums(:,1) == refChan) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
     end
+    
+
     
     % Calc Whole grid mean and std err
     grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:,Header.class == desClass),4));
@@ -1540,7 +1544,7 @@ for kk = 1:16
         trialMeanR = mean(grid1R,4);
         
         timeEvent = 1;
-        
+       
         x = linspace(0, size(p,1) * Header.params.winSize, Header.params.winNum);
         xx = [x, fliplr(x)];
         
@@ -1554,10 +1558,10 @@ for kk = 1:16
         
         % plot
         hold on
-        plot([0,0], [0,0], 'r') % Legend Stuff
-        plot([0,0], [0,0], 'k') % Legned stuff
+%         plot([0,0], [0,0], 'r') % Legend Stuff
+%         plot([0,0], [0,0], 'k') % Legned stuff
         
-        plot([timeEvent, timeEvent], [0,1], 'k:')
+%         plot([timeEvent, timeEvent], [0,1], 'k:')
         
         pData = patch(xx, patchdata, 1);
         lData = plot(x, trialMeanP(:,ii), 'b', 'linewidth', 1);
@@ -1565,7 +1569,7 @@ for kk = 1:16
 %         plot(x, repmat(meanBG, 1,size(p,1)), 'r')
 %         plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
         hold off
-        ylim([0,1])
+%         ylim([0,1])
         % ylim([0.9,1])
         xlim([0,x(end)])
         xlabel('Time, seconds')
@@ -1580,3 +1584,194 @@ for kk = 1:16
        
     end % END FOR
 end
+
+%% Delta Intergrid Std and patch
+
+filePath = 'E:\data\PLI\delta\20080726-113238\20080726-113238-002.ns5';
+Fs = Header.Fs;
+desClass = 1;
+% load('E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData_WPLI_winSize0.1.mat')
+%     p = p.^2;
+% figure;
+
+meanPeriodDataP = zeros(16,16,2,1);
+meanPeriodDataR = zeros(16,16,2,8);
+
+for kk = 1:16
+    refChan = kk;
+    chansPlot = [refChan, 17:32];
+%     figure;
+    % Find Idx
+    desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+    idx = zeros(size(chanPairNums,1),1);
+    % Find idicies
+    for jj = 1:size(desiredChanPairs,1)
+        idx = idx | ((chanPairNums(:,1) == refChan) & (chanPairNums(:,2) == desiredChanPairs(jj,2)));
+    end
+    
+
+    
+    % Calc Whole grid mean and std err
+    grid1P = zeros(size(p,1), sum(idx), size(p,3), size(p(:,:,:,Header.class == desClass),4));
+    grid1R = grid1P;
+    
+    idxIdx = find(idx==1);
+    
+    for ii = 1:sum(idx)
+        tmpIdx = idxIdx(ii);
+        %         smoothP(:,ii) = p(:,tmpIdx);
+        %     smoothP(:,ii) = smooth(p(:,tmpIdx));
+        grid1P(:,ii,:,:) = p(:,tmpIdx,:, Header.class == desClass);
+        grid1R(:,ii,:,:) = r(:,tmpIdx,:, Header.class == desClass);
+    end % END FOR
+    
+    gridErr = std(grid1P, 0, 4);
+    gridErr = gridErr/size(grid1P,4); % Standard error
+    gridErr = 2*gridErr; % 2*standard error.
+    
+    
+%     gridMeanP = mean(grid1P,2);
+%     gridMeanR = mean(grid1R,2);
+    
+    timeMax = size(p,1);
+    sizeMax = Header.Fs*Header.params.winSize*timeMax;
+    
+    trialMeanP = mean(grid1P,4);
+    trialMeanR = mean(grid1R,4);
+    
+    timeEvent = Header.params.winNum/2.5;
+    
+    for ii = 1:16
+        
+        
+        
+        gridMeanP = mean(grid1P,2);
+        gridMeanR = mean(grid1R,2);
+        
+        timeMax = size(p,1);
+        sizeMax = Header.Fs*Header.params.winSize*timeMax;
+        
+        trialMeanP = mean(grid1P,4);
+        trialMeanR = mean(grid1R,4);
+        
+        timeEvent = 1;
+        
+        meanPeriodDataP(kk,ii,1,:) = mean(mean(trialMeanP(1:8,ii),2)); % Silent Period
+        meanPeriodDataP(kk,ii,2,:) = mean(mean(trialMeanP(9:16,ii),2)); % Speaking Period
+        
+        meanPeriodDataR(kk,ii,1,:) = mean(trialMeanR(1:8,ii),2); % Silent Period
+        meanPeriodDataR(kk,ii,2,:) = mean(trialMeanR(9:16,ii),2); % Speaking Period
+        
+%         stdPeriodDataP(kk,ii,1) = mean(std(trialMeanP(1:8,ii),2));
+%         stdPeriodDataP(kk,ii,2) = mean(std(trialMeanP(9:16,ii),2));
+%         
+%         stdPeriodDataR(kk,ii,1) = mean(std(trialMeanR(1:8,ii),2));
+%         stdPeriodDataR(kk,ii,2) = mean(std(trialMeanR(9:16,ii),2));
+        
+   
+    end % END FOR
+    
+%     subplot(4,4, kk)
+    
+    
+    
+%     plot(1:16, meanPeriodDataP(kk,:,1),'b') % Silent period
+%     hold on
+%     plot(1:16, meanPeriodDataP(kk,:,2),'r') % Speaking Period
+%     hold off
+    
+end % END FOR
+
+meanPeriodDataP2 = mean(meanPeriodDataP,2);
+meanPeriodDataP2 = meanPeriodDataP2(:,:,2,:) - meanPeriodDataP2(:,:,1,:);
+% meanPeriodDataP2 = mean(meanPeriodDataP2, 4);
+
+plot([1,16], [0,0],'k')
+hold on;
+plot(meanPeriodDataP2, 'b.')
+
+%% SpaceInvader Sub
+
+layout = [1:4;5:8;9:12;13:16];
+mapCol = jet(128);
+% data = reshape(meanPeriodDataP2,4,4);
+data = meanPeriodDataP2';
+chans = min(layout(layout(:)~=-1)) : max(layout(:));
+border = 0.00;
+
+% Find Lower Left corner
+[~,chanLLIdx] = intersect(layout,chans);
+
+% Subdivide each section into [x,y] sections. Where x and y are layout
+% dimensions.
+rowsFix = linspace(0+border,1-border,size(layout,1)+1);
+
+colsFix = linspace(0+border,1-border,size(layout,2)+1);
+clf;
+figure;
+
+for ii = 1:length(chanLLIdx)
+    
+    chanIdx = layout(chanLLIdx(ii));
+    [offx, offy] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx));
+    
+    if isempty(intersect(chanIdx, gridDef.badChan))
+        
+        for jj = 1:length(chanLLIdx)
+            
+            chanIdx2 = layout(chanLLIdx(jj));
+            
+            [xpos, ypos] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx2));
+            
+            xSubPos = [rowsFix(1,xpos), rowsFix(1,xpos+1), rowsFix(1,xpos+1), rowsFix(1,xpos)  ] + offx;
+            ySubPos = [colsFix(1,ypos), colsFix(1,ypos)  , colsFix(1,ypos+1), colsFix(1,ypos+1)] + offy;
+            
+            colorPatch = mapCol(floor(data(chanIdx,chanIdx2) * 127+1),:);
+            
+            pData  = patch( xSubPos, ySubPos, colorPatch);
+            
+%             if  chanIdx == chanIdx2 || ~isempty(intersect(chanIdx2, gridDef.badChan))
+%                 set(pData, 'FaceColor', [0,0,0])
+%             end % END IF
+            
+            xlim([0.5,size(layout,1)+1.5])
+            ylim([0.5,size(layout,2)+1.5])
+            
+            set(pData, 'EdgeColor', 'none')
+            
+        end % END FOR
+               
+        [offx, offy] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx));
+        
+        pData = patch([rowsFix(1), rowsFix(end), rowsFix(end),   rowsFix(1)] + offx,...
+            [colsFix(1),   colsFix(1), colsFix(end), colsFix(end)] + offy,...
+            [1,1,1]);
+        
+        set(pData, 'FaceColor', 'none')
+        set(pData, 'EdgeColor', [0,0,0]);
+        
+    end % END IF
+    
+end % END FOR
+
+title(sprintf('Inter-Grid: Average Absolute\nPLI Difference Between Silence and Non-Silent'))
+
+xlim([0.9,size(layout,1)+1.1])
+ylim([0.9,size(layout,2)+1.1])
+
+axis('square')
+camroll(-90)
+set(gca, 'XTick', [])
+set(gca, 'XTickLabel', [])
+set(gca, 'YTick', [])
+set(gca, 'YTickLabel', [])
+colormap(jet)
+cData = colorbar('Location', 'East');
+
+set(cData, 'YAxisLocation','right')
+% set(cData, 'YTick', plotData.cbartick)
+% set(cData, 'YTickLabel', plotData.cbarticklabel)
+set(cData, 'TickDirection', 'Out')
+%     set(cData, 'Label', 'PLI')
+cData.Label.String = 'abs PLI diff';
+
