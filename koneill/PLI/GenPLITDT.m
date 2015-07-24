@@ -1,4 +1,4 @@
-function [filePathOut] = GenPLIChan(filePath, pathOutName, params)
+function [filePathOut] = GenPLITDT(filePath, pathOutName, params)
 
 %% Parse Input
 if ~isfield(params, 'winSize');     winSize     = 1;      else winSize     = params.winSize; end
@@ -50,7 +50,7 @@ end % END IF statsFlag
 
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '_rawPhi.mat']);
 % filePathOut = fullfile(pathOutName, [fileName, '_PLI_winSize', num2str(winSize), '.mat']);
-filePathOut = [filePathOut, '_PLI_winSize', num2str(winSize), '.mat'];
+filePathOut = [filePathOut, '_WPLI_winSize', num2str(winSize), '.mat'];
 
 %% Give User Feedback
 fprintf('******************************************************************\n')
@@ -264,9 +264,9 @@ for wt = 1:numTrials
                 % calculate PLI and R
                 if rawPhiFlag
                     %                 tmpDeltaPhi = nan(winNum, (winSize*Fs), surrNum+1);
-                    [tmpp(:,ss),tmpr(:,ss), tmpDeltaPhi(:,:,ss)]=pli(raw1, raw2s);
+                    [tmpp(:,ss),tmpr(:,ss), tmpDeltaPhi(:,:,ss)] = wpli(raw1, raw2s);
                 else
-                    [tmpp(:,ss),tmpr(:,ss),~]=pli(raw1, raw2s);
+                    [tmpp(:,ss),tmpr(:,ss),~] = wpli(raw1, raw2s);
                 end % END IF rawPhiFlag
                 
             end
