@@ -16,7 +16,7 @@
 %% Initialize variables
 
 startTime = ''; % Leave empty if the activeX system works. Else insert the start time of the block you want to extract
-timeOfInterest = '12:04:53'; % The time (in real time) of interest. Uses 24hr time
+timeOfInterest = '00:00:00'; % The time (in real time) of interest. Uses 24hr time
 
 timeBounds = [-.03, .03]; % Extract data +/- 5 minutes around the timeOfInterest
 
@@ -105,8 +105,8 @@ end % END IF
 Header.tank = tank;
 Header.block = block;
 
-Header.timeBounds = timeBounds;
-Header.timeOfInterest = timeOfInterest;
+% Header.timeBounds = timeBounds;
+% Header.timeOfInterest = timeOfInterest;
 
 Header.tankBlockPath = sourceDir;
 Header.sourceDir = sourceDir;
@@ -114,50 +114,50 @@ Header.targetDir = targetDir;
 
 startTime = Header.startTime;
 
-%% Compute number of seconds between startTime and timeOfInterest
-
-timeExpr = '([0-9]+):([0-9]+):([0-9]+)';
-startToken = regexp(startTime, timeExpr, 'Tokens');
-startSeconds = str2double(startToken{1}{1}) * 3600 + str2double(startToken{1}{2}) * 60 + str2double(startToken{1}{3}) * 1;
-
-toiToken = regexp(timeOfInterest, timeExpr, 'Tokens');
-toiSeconds = str2double(toiToken{1}{1}) * 3600 + str2double(toiToken{1}{2}) * 60 + str2double(toiToken{1}{3}) * 1;
-
-timeDiff = toiSeconds - startSeconds;
-
-% If timeOfInterest is smaller than start time (ie: time crosses midnight)
-% add 24 hours to the timeOfInterest time.
-if timeDiff < 0
-    toiSeconds = toiSeconds + 24*3600;
-    timeDiff = toiSeconds - startSeconds;
-end % END IF
-
-% Compute the time bounds for the segment of interest
-time2Extract = [timeDiff + timeBounds(1)*60, timeDiff + timeBounds(2)*60];
-
-% Convert seconds to H:M:S
-tmpTime = [toiSeconds + timeBounds(1)*60];
-segH = floor(tmpTime/3600);
-tmpTime = mod(tmpTime, 3600);
-segM = floor(tmpTime/60);
-tmpTime = mod(tmpTime, 60);
-segS = floor(tmpTime);
-
-segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
-
-Header.segmentStartTime = segTime;
-
-% Convert seconds H:M:S
-tmpTime = [toiSeconds + timeBounds(2)*60];
-segH = floor(tmpTime/3600);
-tmpTime = mod(tmpTime, 3600);
-segM = floor(tmpTime/60);
-tmpTime = mod(tmpTime, 60);
-segS = floor(tmpTime);
-
-segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
-
-Header.segmentStopTime = segTime;
+% %% Compute number of seconds between startTime and timeOfInterest
+% 
+% timeExpr = '([0-9]+):([0-9]+):([0-9]+)';
+% startToken = regexp(startTime, timeExpr, 'Tokens');
+% startSeconds = str2double(startToken{1}{1}) * 3600 + str2double(startToken{1}{2}) * 60 + str2double(startToken{1}{3}) * 1;
+% 
+% toiToken = regexp(timeOfInterest, timeExpr, 'Tokens');
+% toiSeconds = str2double(toiToken{1}{1}) * 3600 + str2double(toiToken{1}{2}) * 60 + str2double(toiToken{1}{3}) * 1;
+% 
+% timeDiff = toiSeconds - startSeconds;
+% 
+% % If timeOfInterest is smaller than start time (ie: time crosses midnight)
+% % add 24 hours to the timeOfInterest time.
+% if timeDiff < 0
+%     toiSeconds = toiSeconds + 24*3600;
+%     timeDiff = toiSeconds - startSeconds;
+% end % END IF
+% 
+% % Compute the time bounds for the segment of interest
+% time2Extract = [timeDiff + timeBounds(1)*60, timeDiff + timeBounds(2)*60];
+% 
+% % Convert seconds to H:M:S
+% tmpTime = [toiSeconds + timeBounds(1)*60];
+% segH = floor(tmpTime/3600);
+% tmpTime = mod(tmpTime, 3600);
+% segM = floor(tmpTime/60);
+% tmpTime = mod(tmpTime, 60);
+% segS = floor(tmpTime);
+% 
+% segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
+% 
+% Header.segmentStartTime = segTime;
+% 
+% % Convert seconds H:M:S
+% tmpTime = [toiSeconds + timeBounds(2)*60];
+% segH = floor(tmpTime/3600);
+% tmpTime = mod(tmpTime, 3600);
+% segM = floor(tmpTime/60);
+% tmpTime = mod(tmpTime, 60);
+% segS = floor(tmpTime);
+% 
+% segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
+% 
+% Header.segmentStopTime = segTime;
 %% Extract Header and Test for the length of the sev files
 
 fileList = dir(fullfile(sourceDir, '*.sev'));
@@ -247,15 +247,15 @@ end % END IF fileVersion > 0
 numSamp = tmpHeader.fileSizeBytes/ tmpHeader.numByteSamp - 10;
 numSec = numSamp / tmpHeader.Fs;
 
-if numSec <= time2Extract(2)
-    error('The time-of-interest range is beyond the scope of this file');
-end % END IF
+% if numSec <= time2Extract(2)
+%     error('The time-of-interest range is beyond the scope of this file');
+% end % END IF
 
 Header.Fs = tmpHeader.Fs;
 Header.fileVersion = tmpHeader.fileVersion;
 Header.numChan = length(fileList);
 Header.numSamp = numSamp;
-Header.numSampSegment = diff(time2Extract)*Header.Fs;
+% Header.numSampSegment = diff(time2Extract)*Header.Fs;
 Header.dataFormat = 'double';
 Header.outputPath = outputPath;
 Header.outputName = outputName;
@@ -321,8 +321,9 @@ for ii = 1:length(fileList)
         
     end % END FOR
     % fseek to the start of the segment of interest
-    fseek(FID, floor(time2Extract(1)*Header.Fs) * numByte , 'bof');
-    tmpData = fread(FID, diff(time2Extract)*Header.Fs, ['*' tmpHeader.dataFormat])'; % Read data from file
+%     fseek(FID, floor(time2Extract(1)*Header.Fs) * numByte , 'bof');
+%     tmpData = fread(FID, diff(time2Extract)*Header.Fs, ['*' tmpHeader.dataFormat])'; % Read data from file
+    tmpData = fread(FID, inf, ['*' tmpHeader.dataFormat])';
     
     varName = ['C', num2str(ii)]; % Name the channel variable
     eval([varName '=tmpData;']); % Set the channel variable to tmpData
