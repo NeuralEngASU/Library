@@ -16,9 +16,9 @@
 %% Initialize variables
 
 startTime = ''; % Leave empty if the activeX system works. Else insert the start time of the block you want to extract
-timeOfInterest = '00:00:00'; % The time (in real time) of interest. Uses 24hr time
+timeOfInterest = '30:17:03'; % The time (in real time) of interest. Uses 24hr time
 
-timeBounds = [-.03, .03]; % Extract data +/- 5 minutes around the timeOfInterest
+timeBounds = [-3, 3]; % Extract data +/- 5 minutes around the timeOfInterest
 
 sourceDir = ''; % The source directory of the *.sev files (block)
 targetDir = ''; % The location where you want to save the extracted data
@@ -114,50 +114,50 @@ Header.targetDir = targetDir;
 
 startTime = Header.startTime;
 
-% %% Compute number of seconds between startTime and timeOfInterest
-% 
-% timeExpr = '([0-9]+):([0-9]+):([0-9]+)';
-% startToken = regexp(startTime, timeExpr, 'Tokens');
-% startSeconds = str2double(startToken{1}{1}) * 3600 + str2double(startToken{1}{2}) * 60 + str2double(startToken{1}{3}) * 1;
-% 
-% toiToken = regexp(timeOfInterest, timeExpr, 'Tokens');
-% toiSeconds = str2double(toiToken{1}{1}) * 3600 + str2double(toiToken{1}{2}) * 60 + str2double(toiToken{1}{3}) * 1;
-% 
-% timeDiff = toiSeconds - startSeconds;
-% 
-% % If timeOfInterest is smaller than start time (ie: time crosses midnight)
-% % add 24 hours to the timeOfInterest time.
-% if timeDiff < 0
-%     toiSeconds = toiSeconds + 24*3600;
-%     timeDiff = toiSeconds - startSeconds;
-% end % END IF
-% 
-% % Compute the time bounds for the segment of interest
-% time2Extract = [timeDiff + timeBounds(1)*60, timeDiff + timeBounds(2)*60];
-% 
-% % Convert seconds to H:M:S
-% tmpTime = [toiSeconds + timeBounds(1)*60];
-% segH = floor(tmpTime/3600);
-% tmpTime = mod(tmpTime, 3600);
-% segM = floor(tmpTime/60);
-% tmpTime = mod(tmpTime, 60);
-% segS = floor(tmpTime);
-% 
-% segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
-% 
-% Header.segmentStartTime = segTime;
-% 
-% % Convert seconds H:M:S
-% tmpTime = [toiSeconds + timeBounds(2)*60];
-% segH = floor(tmpTime/3600);
-% tmpTime = mod(tmpTime, 3600);
-% segM = floor(tmpTime/60);
-% tmpTime = mod(tmpTime, 60);
-% segS = floor(tmpTime);
-% 
-% segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
-% 
-% Header.segmentStopTime = segTime;
+%% Compute number of seconds between startTime and timeOfInterest
+
+timeExpr = '([0-9]+):([0-9]+):([0-9]+)';
+startToken = regexp(startTime, timeExpr, 'Tokens');
+startSeconds = str2double(startToken{1}{1}) * 3600 + str2double(startToken{1}{2}) * 60 + str2double(startToken{1}{3}) * 1;
+
+toiToken = regexp(timeOfInterest, timeExpr, 'Tokens');
+toiSeconds = str2double(toiToken{1}{1}) * 3600 + str2double(toiToken{1}{2}) * 60 + str2double(toiToken{1}{3}) * 1;
+
+timeDiff = toiSeconds - startSeconds;
+
+% If timeOfInterest is smaller than start time (ie: time crosses midnight)
+% add 24 hours to the timeOfInterest time.
+if timeDiff < 0
+    toiSeconds = toiSeconds + 24*3600;
+    timeDiff = toiSeconds - startSeconds;
+end % END IF
+
+% Compute the time bounds for the segment of interest
+time2Extract = [timeDiff + timeBounds(1)*60, timeDiff + timeBounds(2)*60];
+
+% Convert seconds to H:M:S
+tmpTime = [toiSeconds + timeBounds(1)*60];
+segH = floor(tmpTime/3600);
+tmpTime = mod(tmpTime, 3600);
+segM = floor(tmpTime/60);
+tmpTime = mod(tmpTime, 60);
+segS = floor(tmpTime);
+
+segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
+
+Header.segmentStartTime = segTime;
+
+% Convert seconds H:M:S
+tmpTime = [toiSeconds + timeBounds(2)*60];
+segH = floor(tmpTime/3600);
+tmpTime = mod(tmpTime, 3600);
+segM = floor(tmpTime/60);
+tmpTime = mod(tmpTime, 60);
+segS = floor(tmpTime);
+
+segTime = [num2str(segH), ':', num2str(segM), ':', num2str(segS)];
+
+Header.segmentStopTime = segTime;
 %% Extract Header and Test for the length of the sev files
 
 fileList = dir(fullfile(sourceDir, '*.sev'));
