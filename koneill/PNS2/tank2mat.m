@@ -1,25 +1,17 @@
-function data = tank2mat( varargin )
+% params.eventNames = {'Sync'};
+% params.eventChans = 1;
 
-derp = 1;
+function data = tank2mat( params )
+
+if ~isfield(params, 'eventNames'); eventNames = {'Sync'}; else eventNames = params.eventNames; end
+if ~isfield(params, 'eventChans'); eventChans = 1;        else eventChans = params.eventChans; end
+
 % Default Variables
 EVENTNAME = {'LFPx','xWav','eNe1'};
 CHANNEL   = 1:96;
 BLOCKPATH = '';
 
 extList = {'.tev', '.tsq', '.sev'};
-
-% parse varargin
-for i = 1:2:length(varargin)
-    eval([upper(varargin{i}) '=varargin{i+1};']);
-end
-
-eventName = EVENTNAME;
-channel = CHANNEL;
-blockPath = BLOCKPATH;
-
-clear('EVENTNAME')
-clear('CHANNEL')
-clear('BLOCKPATH')
 
 % If no path was given, make the user select the block
 if isempty(blockPath)
@@ -143,13 +135,7 @@ for n = 1%:length(eventName)
             % Measure how many headers are left.
             
             
-        end % END WHILE TSQ
-%         
-%         h5create(dataSet, ['/C', num2str(chan)], [1, length(data)]);
-%         h5write(dataSet, ['/C', num2str(chan)], data);
-        
-%         clear('data')
-        
+        end % END WHILE TSQ       
     end % END FOR CHANNELS
 end % END FOR EVENT NAME
 

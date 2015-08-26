@@ -10,7 +10,7 @@
 
 % Define looping params
 numClass = 11;
-numRNGTry = 30;
+numRNGTry = 20;
 kFoldSize = 10;
 
 % Define data params
@@ -18,7 +18,7 @@ dataParams.timeBounds = [0.9, 1.6] * 10; % 800 msec
 dataParams.useP = 1;
 dataParams.useR = 1;
 dataParams.classes = [1,2];
-dataParams.trainRatio = 0.5;
+dataParams.trainRatio = 0.7;
 dataParams.fileName = 'Delta_ProcessedTrialData_PLI_winSize0.1.mat';
 dataParams.pathName = 'E:\data\PLI\delta\PLIOutput';
 dataParams.couplingPairsIdx = [];

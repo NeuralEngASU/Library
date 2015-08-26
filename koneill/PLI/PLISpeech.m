@@ -10,15 +10,21 @@
 
 % Define looping params
 numClass = 11;
-numRNGTry = 30;
+numRNGTry = 20;
 kFoldSize = 10;
+cvLoopMax = 30;
+
+trainParams.numClass = numClass;
+trainParams.numRNGTry = numRNGTry;
+trainParams.kFoldSize = kFoldSize;
+trainParams.cvLoopMax = cvLoopMax;
 
 % Define data params
 dataParams.timeBounds = [0.9, 1.6] * 10; % 800 msec
 dataParams.useP = 1;
 dataParams.useR = 1;
 dataParams.classes = [1,2];
-dataParams.trainRatio = 0.5;
+dataParams.trainRatio = 0.7;
 dataParams.fileName = 'Delta_ProcessedTrialData_PLI_winSize0.1.mat';
 dataParams.pathName = 'E:\data\PLI\delta\PLIOutput';
 dataParams.couplingPairsIdx = [];
@@ -72,7 +78,58 @@ for numClassPair = 2:numClass
             [trainData, trainLabels, testData, testLabels] = PLISVMSelectData(dataParams, tryRNG);
             
             % Partition Cross Validation
-%             cv = cvpartition(trainLabels,'KFold',kFoldSize);
+            CVPart = cvpartition(trainLabels,'KFold',kFoldSize); % Stratified Partition
+            
+            stepSize = 10;
+            bestLog2c = 1;
+            bestLog2g = -1;
+            epsilon = 0.005;
+            bestcv = 1;
+            Ncv = 3; % Ncv-fold cross validation cross validation
+            deltacv = 10^6;
+            
+            loopCount = 1;
+            
+            uniqueTrainLabels = unique(trainLabels);
+            
+            for trainLabelIdx = 1:size(uniqueTrainLabels);
+            
+                trainLabelString{trainLabelIdx} = num2str(uniqueTrainLabels(trainLabelIdx));
+                
+            end %END FOR trainLabelIdx
+            
+            while (abs(deltacv) > epsilon) || (loopCount >= cvLoopMax)
+                    bestcv_prev = bestcv;
+                    prevStepSize = stepSize;
+                    stepSize = prevStepSize/2;
+                    log2c_list = bestLog2c-prevStepSize:stepSize/2:bestLog2c+prevStepSize;
+                    log2g_list = bestLog2g-prevStepSize:stepSize/2:bestLog2g+prevStepSize;
+                    
+                    numLog2c = length(log2c_list);
+                    numLog2g = length(log2g_list);
+                    cvMatrix = zeros(numLog2c,numLog2g);
+                    
+                    for i = 1:numLog2c
+                        log2c = log2c_list(i);
+                        for j = 1:numLog2g
+                            log2g = log2g_list(j);
+                            t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',2^log2c, 'KernelScale', 2^log2g);
+                            SVMModel = fitcecoc(trainData', trainLabels, 'Learners', t,'CVPartition', CVPart, 'Coding', 'onevsone');
+                            cv = kfoldLoss(SVMModel);
+                            fprintf([num2str(cv), '\t:\ti = ', num2str(i), '/', num2str(numLog2c), '\t:\tj = ', num2str(j), '/', num2str(numLog2g), '\n']);
+                            if (cv <= bestcv),
+                                bestcv = cv; bestc = 2^log2c; bestg = 2^log2g;
+                                bestLog2c = log2c; bestLog2g = log2g;
+                            end % END IF better cv
+                        end % END FOR g
+                    end % END FOR c
+                    deltacv = bestcv - bestcv_prev;
+                    
+                    
+                    loopCount = loopCount + 1;
+                    
+            end % END WHILE
+            
             
             % Generate cross-validation params if true
 %             if genCVParams
@@ -80,7 +137,7 @@ for numClassPair = 2:numClass
 %             end % END IF genCVParams
             
             % Train SVM
-            t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',1, 'KernelScale', 1);
+            t = templateSVM('Standardize', 1, 'KernelFunction', 'gaussian', 'BoxConstraint',bestc, 'KernelScale', bestg);
             Mdl = fitcecoc(trainData', trainLabels, 'Learners', t, 'Coding', 'onevsone');
             
             % Test SVM
@@ -121,4 +178,3 @@ xlim([1,12])
 ylim([0,1])
 
 % EOF
-
