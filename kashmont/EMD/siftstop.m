@@ -11,11 +11,7 @@ s = length(maxpts)+length(minpts);
 
 % stopsift = s<4;
 
-<<<<<<< HEAD
-f=(round((length(x))/Fs)*2);
-=======
-f=(round((length(x))/Fs));
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
+f=2*(round((length(x))/Fs)*2);
 
 extdiff=length(maxpts)-length(minpts);
 
@@ -27,8 +23,8 @@ else
     avgdiff=mean(ppdiff);
 end
 
-stopsift = s<f | avgdiff<20;
-
+stopsift = s<f| avgdiff<20;
+%s<f
 end
 
 
