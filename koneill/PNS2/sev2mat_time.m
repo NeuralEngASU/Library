@@ -16,9 +16,9 @@
 %% Initialize variables
 
 startTime = ''; % Leave empty if the activeX system works. Else insert the start time of the block you want to extract
-timeOfInterest = '30:17:03'; % The time (in real time) of interest. Uses 24hr time
+timeOfInterest = '10:55:00'; % The time (in real time) of interest. Uses 24hr time
 
-timeBounds = [-3, 3]; % Extract data +/- 5 minutes around the timeOfInterest
+timeBounds = [-.5, .5]; % Extract data +/- 5 minutes around the timeOfInterest
 
 sourceDir = ''; % The source directory of the *.sev files (block)
 targetDir = ''; % The location where you want to save the extracted data
@@ -321,9 +321,9 @@ for ii = 1:length(fileList)
         
     end % END FOR
     % fseek to the start of the segment of interest
-%     fseek(FID, floor(time2Extract(1)*Header.Fs) * numByte , 'bof');
-%     tmpData = fread(FID, diff(time2Extract)*Header.Fs, ['*' tmpHeader.dataFormat])'; % Read data from file
-    tmpData = fread(FID, inf, ['*' tmpHeader.dataFormat])';
+    fseek(FID, floor(time2Extract(1)*Header.Fs) * numByte , 'bof');
+    tmpData = fread(FID, diff(time2Extract)*Header.Fs, ['*' tmpHeader.dataFormat])'; % Read data from file
+%     tmpData = fread(FID, inf, ['*' tmpHeader.dataFormat])';
     
     varName = ['C', num2str(ii)]; % Name the channel variable
     eval([varName '=tmpData;']); % Set the channel variable to tmpData
