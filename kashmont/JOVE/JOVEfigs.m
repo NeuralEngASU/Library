@@ -7,6 +7,13 @@ load('E:\data\human CNS\JOVE\Case4.mat')
 load('E:\data\human CNS\JOVE\Case5.mat')
 load('E:\data\human CNS\JOVE\Case6.mat')
 
+load('D:\Data\JOVE\Case1.mat')
+load('D:\Data\JOVE\Case2.mat')
+load('D:\Data\JOVE\Case3.mat')
+load('D:\Data\JOVE\Case4.mat')
+load('D:\Data\JOVE\Case5.mat')
+load('D:\Data\JOVE\Case6.mat')
+
 c(1,:) = Case1(5,t);
 c(2,:) = Case2(10,t);
 c(3,:) = Case3(2,t);
@@ -17,7 +24,7 @@ c(6,:) = Case6(16,t);
 %% Raw plots
 ch = 10;
 L=1:10*Fs;
-t = [4000000:4061035];
+t = [2000000:2061035];
 
 figure;
 subplot(2,3,1)
@@ -45,10 +52,10 @@ end
 
 %% High-pass filter
 
-for ch = 16:30
+for ch = 1:15
 %     x = double(eval(['Case' num2str(c)]));
     Fs = header1.Fs; % sampling frequency
-    L = size(c,2); % length of signal
+    L = size(Case1,2); % length of signal
     tt = 0:1/Fs:(L-1)/Fs; % time base
     NFFT = 2^14;
     f = Fs/2*linspace(0,1,NFFT/2+1); % single sided spectrum
@@ -59,10 +66,10 @@ for ch = 16:30
     [z,p,k] = butter(order,Fc/(Fs/2),'high');
     [SOS,G] = zp2sos(z,p,k);% convert to SOS structure to use filter analysis tool
     
-    x_filt(ch,:) = filtfilt(SOS,G,double(Case6(ch,t)));
+    x_filt(ch,:) = filtfilt(SOS,G,double(Case4(ch,t)));
     
-%     subplot(2,3,c)
-%     plot(x_filt(c,:))
+%     subplot(2,3,ch)
+%     plot(x_filt(ch,:))
 %     ylim([-.0006 .0006])
     
     clear z p k SOS G
@@ -104,7 +111,7 @@ cpow = [c1pow;c2pow;c3pow;c4pow;c5pow;c6pow];
 figure;
 for c = 1:6   
     subplot(2,3,c);
-     loglog(f,cpow(c,:));
+     loglog(f,xfilt(c,:));
 %    plot(f,10*log10(cpow(c,:)))
     title('Multi-taper Spectrum');
     xlabel('Frequency (Hz)')
@@ -175,7 +182,7 @@ for ch=1:6
 subplot(2,6,ch)
 plot(x_filt(ch,:))
 xlim([0 61036])
-ylim([-.0008 .0008])
+% ylim([-.0008 .0008])
 title('High-Pass Filtered Data');
 xlabel('Time (s)')
 ylabel('Voltage (uV)')
@@ -196,7 +203,7 @@ subplot(2,6,(ch+6))
 % plot(f,pxx
 loglog(f,pxx)
 xlim([10e-1 10e3])
-ylim([10e-18 10e-8])
+ylim([10e-16 10e-5])
 title('Multi-taper Spectrum');
 xlabel('Frequency (Hz)')
 ylabel('Power')
