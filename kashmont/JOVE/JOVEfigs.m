@@ -24,7 +24,7 @@ c(6,:) = Case6(16,t);
 %% Raw plots
 ch = 10;
 L=1:10*Fs;
-t = [2000000:2061035];
+t = [1000:(1000+Header.Fs*30)];
 
 figure;
 subplot(2,3,1)
@@ -54,7 +54,7 @@ end
 
 for ch = 1:15
 %     x = double(eval(['Case' num2str(c)]));
-    Fs = header1.Fs; % sampling frequency
+    Fs = Header.Fs; % sampling frequency
     L = size(Case1,2); % length of signal
     tt = 0:1/Fs:(L-1)/Fs; % time base
     NFFT = 2^14;
@@ -66,7 +66,7 @@ for ch = 1:15
     [z,p,k] = butter(order,Fc/(Fs/2),'high');
     [SOS,G] = zp2sos(z,p,k);% convert to SOS structure to use filter analysis tool
     
-    x_filt(ch,:) = filtfilt(SOS,G,double(Case4(ch,t)));
+    x_filt(ch,:) = filtfilt(SOS,G,double(Case3(ch,t)));
     
 %     subplot(2,3,ch)
 %     plot(x_filt(ch,:))
@@ -170,7 +170,7 @@ end
 
 figure;
 
-for ch=1:6
+for ch=1:15
 % subplot(4,6,ch)
 % plot(c(ch,:))
 % xlim([0 61036])
@@ -179,15 +179,18 @@ for ch=1:6
 
 % set (gca,'xticklabel',[0 5 10]);
 
-subplot(2,6,ch)
+subplot(3,5,ch)
 plot(x_filt(ch,:))
-xlim([0 61036])
+xlim([0 size(x_filt,2)])
 % ylim([-.0008 .0008])
 title('High-Pass Filtered Data');
 xlabel('Time (s)')
 ylabel('Voltage (uV)')
 set (gca,'xtick',[0 Fs*5 Fs*10]);
 set (gca,'xticklabel',[0 5 10]);
+end
+
+figure;
 
 % subplot(4,6,(ch+12))
 % plot(ff,2*abs(FFTcase(ch,1:nfft/2+1)));
@@ -196,14 +199,15 @@ set (gca,'xticklabel',[0 5 10]);
 % title('Spectrum');
 % xlabel('Frequency (Hz)')
 % ylabel('Power (dB)')
-
-subplot(2,6,(ch+6))
+for ch = 1:15
+subplot(3,5,ch)
 [pxx,f] = pmtm(x_filt(ch,:),9,NFFT,Fs);
 % % plot(f,10*log10(pxx))
 % plot(f,pxx
 loglog(f,pxx)
 xlim([10e-1 10e3])
-ylim([10e-16 10e-5])
+% ylim([10e-18 10e-8])
+ylim([10e-14 10e-3])
 title('Multi-taper Spectrum');
 xlabel('Frequency (Hz)')
 ylabel('Power')
