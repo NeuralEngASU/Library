@@ -8,7 +8,7 @@
 
 %%
 
-function [wincomp] = window(data,Fs,WinLen,ch,OvLp)
+function [wincomp] = window(data,Fs,ch,WinLen,OvLp)
 
 %calculate the number of samples (data points) in one window
 winsamp = WinLen*Fs;

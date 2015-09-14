@@ -1,16 +1,17 @@
 
+filename = 'D:\human CNS\PCH\XLTek_Data\2015PP02_D01_OR.edf';
 
-fid = fopen('/Users/kariashmont/Desktop/Data/KT/KT_7.edf','r+');
+fid = fopen(filename,'r+');
 
 fseek(fid,8,'bof');
 
-fwrite(fid,'2012PP02D03S7                      ');
+fwrite(fid,'2015PP02_D01_OR                      ');
 
 fseek(fid,168,'bof');
 
 fwrite(fid,'XX.XX.XX');
 fclose(fid);
 
-[header] = edfread('/Users/kariashmont/Desktop/Data/KT/KT_7.edf');
+[header] = edfread(filename);
 header
 header.patientID
