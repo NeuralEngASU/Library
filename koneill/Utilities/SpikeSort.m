@@ -4,6 +4,7 @@
 %         Artificial Neural Computation EEE Class.
 %
 %   Authors: Taylor Hearn, Kevin O'Neill, Denise Oswalt
+%   Date: 2015.08.24
 %
 %   The purpose of this function is to prepare the data for the selected
 %   sorting method.
@@ -19,27 +20,19 @@
 %                        look for that many units.
 %
 %       method:    [1-3] Determins which method to use for sorting.
-%                     (1): Use PCA + K-means, interate k for best match or
-%                          use defined numUnits.
+%                     (1): Use PCA + K-means, iterate k for best match or
+%                          use defined numUnits. Randomly seed 20 times.
 %                       2: ANN.
-%
-%       verbose:   [0-2] Determine how verbose to be.
-%                     (0): Low. Updates user with the current phase of the
-%                          program. Only outputs the analyzed data.
-%                       1: Debug interface. Detailed outputs on code
-%                          progress.
-%                       2: Full verbosity. Figures and plots will be
-%                          provided as well as the previous levels.
 %
 %       preProcess [0-3] Determine the ammount of preprocess to use before
 %                        spike sorting.
 %                       0: None. Use the raw data to spike sort.
 %                       1: Filter. Highpass the signal. Use hpFs param to
 %                          set the cuttoff frequency. Default is 250 Hz.
-%                       2: Remove line noise and filter. Uses detrend() and
+%                     (2): Remove line noise and filter. Uses detrend() and
 %                          the Chronux toolbox's rmlinenoise() to remove
 %                          offset and 60Hz signals. Afterwards filter.
-%                     (3): Remove line noise, auto-CAR, filter. Remove
+%                       3: Remove line noise, auto-CAR, filter. Remove
 %                          line noise/detrend, common average reference,
 %                          filter.
 %
@@ -54,7 +47,7 @@ function [] = SpikeSort(Header, params, data)
 if ~isfield(params, 'Fs');         Fs         = 500; else Fs         = params.Fs; end
 if ~isfield(params, 'numSpikes');  numNeuron  =  -1; else numNeuron  = params.numNeuron; end
 if ~isfield(params, 'method');     method     =   1; else method     = params.method; end
-if ~isfield(params, 'preProcess'); preProcess =   3; else preProcess = params.preProcess; end
+if ~isfield(params, 'preProcess'); preProcess =   2; else preProcess = params.preProcess; end
 if ~isfield(params, 'hpFs');       hpFs       = 250; else hpFs       = params.hpFs; end
 
 
@@ -71,12 +64,83 @@ voltageLabel = ['Voltage, uV'];
 switch(preProcess)
     case 0;
         % Do nothing
+        anData = data;
         preProcessTitle = 'Raw data';
-    case 1;
+        
+    case 1; % High-pass filter only
+        % High-pass filter
+        order = 10;   % Filter Order
+        Fpass = hpFs; % First Passband Frequency [Hz]
+        Astop = 60;   % First Stopband Attenuation [dB]
+        Apass  = 1;   % Passband Ripple [dB]
+
+        h = fdesign.highpass('N,Fp,Ast,Ap', order, Fpass, Astop, Apass);
+        Hd = design(h, 'ellip');
+        
+        tmpData = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tmpData);
+        
+        % Assign processed data
+        anData = tmpData; 
+        clear tmpData
         preProcessTitle = ['High-pass filter at ', num2str(hpFs), ' Hz'];
-    case 2;
+        
+    case 2; % Detrend/remove line noise then high-pass filter
+        % Detrend and remove 60Hz noise
+        tmpData = detrend(data);
+        
+        paramsLine.tapers = [2,5];
+        paramsLine.Fs     = Fs;
+        paramsLine.fpass  = [0, Fs/2];
+        paramsLine.pad    = 1;
+        
+        tmpData = rmlinesc(tmpData, paramsLine);
+        
+        % High-pass filter
+        order = 10;   % Filter Order
+        Fpass = hpFs; % First Passband Frequency [Hz]
+        Astop = 60;   % First Stopband Attenuation [dB]
+        Apass  = 1;   % Passband Ripple [dB]
+
+        h = fdesign.highpass('N,Fp,Ast,Ap', order, Fpass, Astop, Apass);
+        Hd = design(h, 'ellip');
+        
+        tmpData = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tmpData);
+        
+        % Assign processed data
+        anData = tmpData; 
+        clear tmpData
         preProcessTitle = ['Detrended, High-pass filter at ', num2str(hpFs), ' Hz'];
-    case 3;
+        
+    case 3; % Detrend/remove line noise, Auto-CAR?, high-pass filter
+        % Detrend and remove 60Hz noise
+        tmpData = detrend(data);
+        
+        paramsLine.tapers = [2,5];
+        paramsLine.Fs     = Fs;
+        paramsLine.fpass  = [0, Fs/2];
+        paramsLine.pad    = 1;
+        
+        tmpData = rmlinesc(tmpData, paramsLine);
+        
+        % Auto-CAR/CMR
+        % Look at data (or subsection) and determine the statistics of the noise
+        % Generate a vector from noise using the same statistics
+        % CAR data and the new noise vector.
+        
+        % High-pass filter
+        order = 10;   % Filter Order
+        Fpass = hpFs; % First Passband Frequency [Hz]
+        Astop = 60;   % First Stopband Attenuation [dB]
+        Apass  = 1;   % Passband Ripple [dB]
+
+        h = fdesign.highpass('N,Fp,Ast,Ap', order, Fpass, Astop, Apass);
+        Hd = design(h, 'ellip');
+        
+        tmpData = filtfilt(Hd.sosMatrix,Hd.ScaleValues,tmpData);
+        
+        % Assign processed data        
+        anData = tmpData; 
+        clear tmpData
         preProcessTitle = ['Detrended, Auto-CAR, High-pass filter at ', num2str(hpFs), ' Hz'];
     otherwise
 end
@@ -86,7 +150,7 @@ end
 % subplot?
 % sampleIdx?
 
-plot(time, data, 'k')
+plot(time, anData, 'k')
 xlim(timeLimits)
 ylim(voltageLimits)
 
@@ -121,6 +185,8 @@ end
 switch(method)
     case 0;
         % Plot PCA + cluster centers as well
+            % Iterate for different # of clusters
+                % Iterate for different seeds.
     case 1;
     case 2;
     otherwise

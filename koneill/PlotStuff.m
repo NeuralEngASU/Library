@@ -5,6 +5,8 @@ y = real((-2).^x);
 
 % %%
 stdErr = 100*exp(x./10);
+
+figure;
 plot(stdErr)
 % %%
 lData = plot(x,y); % Plots y versus x
@@ -17,7 +19,7 @@ set(gcf, 'Position',[2 2 3 1.5])
 % set(lData, 'LineWidth', 2.75);  % Adjusts the line thickness
 
 %% Patches
-
+figure;
 stdErr = 75*exp(x./10);
 
 xx = [x, fliplr(x)];    % x-values for each of the y values
@@ -89,8 +91,8 @@ set(h_xlabel,'FontSize',15);
 h_ylabel = get(gca,'yLabel');
 set(h_xlabel,'FontSize',15);
 
-print('-dpng', ['C:\CodeRepo\Lab\PNS\P201301\Figures2\PSTH_V2_', num2str(k), '.png'], '-r100');
-saveas(gcf,['C:\CodeRepo\Lab\PNS\P201301\Figures2\PSTH_V2_', num2str(k), '.png']);
+% print('-dpng', ['C:\CodeRepo\Lab\PNS\P201301\Figures2\PSTH_V2_', num2str(k), '.png'], '-r100');
+% saveas(gcf,['C:\CodeRepo\Lab\PNS\P201301\Figures2\PSTH_V2_', num2str(k), '.png']);
 
 
 
