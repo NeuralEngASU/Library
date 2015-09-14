@@ -10,7 +10,7 @@
 % fileList{2} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz2_DN.mat'};
 % fileList{3} = {'E:\data\human CNS\EMD\NonSz\ProcData\DN\2014PP01NonSz3_DN.mat'};
 % fileList{1} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz7_DN.mat'};
-fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip1.mat'};
+% fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip1.mat'};
 % fileList{1} = {'E:\data\human CNS\PLI_long_data\LongPLIclip3.mat'};
 % fileList{3} = {'E:\data\human CNS\EMD\Sz\ProcData\DN\2014PP01Sz3_DN.mat'};
 
@@ -57,11 +57,11 @@ for ii = 1:length(fileList)
 end % END FOR
 end % END FOR WORD
 %%
-params.winSize = 0.0333;
-params.Fs = 30000;
+params.winSize = 1;
+params.Fs = 500;
 params.chanProcess = [1:32];
 params.surrFlag = 0;
-params.surrNum = 100;
+params.surrNum = 0;
 params.rawPhiFlag = 0;
 params.biPolarFlag = 0;
 params.statsFlag = 0;
@@ -93,7 +93,7 @@ end % END FOR
 
 %% Delta Bands + Original
 
-fileList{1} = {'E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData.mat'};
+fileList{1} = {'D:\PLI\Delta_ProcessedTrialData.mat'};
 % fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Alpha.mat'};
 % fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Beta.mat'};
 % fileList{1} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Chi.mat'};
@@ -101,7 +101,7 @@ fileList{1} = {'E:\data\PLI\delta\PLIOutput\Delta_ProcessedTrialData.mat'};
 % fileList{3} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Gamma.mat'};
 % fileList{4} = {'E:\data\PLI\delta\PLIOutput\SeperateBands\Delta_PLI_Theta.mat'};
 
-outputPath = 'E:\data\PLI\delta\PLIOutput';
+outputPath = 'D:\PLI';
 
 params.winSize = 0.1;
 params.Fs = 5000;
@@ -119,5 +119,39 @@ for ii = 1:length(fileList)
         [filePathOut] = GenPLIVerbal(fileList{ii}{1}, outputPath, params);
     end % END FOR
 end % END FOR
+
+%% Batch Process Seizure PLI
+
+szFilePath = 'E:\data\human CNS\EMD\Sz\ProcData\CAR';
+szOutputPath = 'D:\PLI\SeizureDetection\Sz\CAR';
+nonSzFilePath = 'E:\data\human CNS\EMD\NonSz\ProcData\CAR';
+nonSzOutputPath = 'D:\PLI\SeizureDetection\NonSz\CAR';
+
+szFileName = dir([szFilePath, '\*.mat']);
+nonSzFileName = dir([nonSzFilePath, '\*.mat']);
+numFiles = size(szFileName,1);
+
+for ii = 1:numFiles
+    
+    load(fullfile(szFilePath, szFileName(ii).name));
+    numChans = size(data,1);
+    
+    params.winSize = 1;
+    params.Fs = 500;
+    params.chanProcess = [1:numChans];
+    params.surrFlag = 0;
+    params.surrNum = 0;
+    params.rawPhiFlag = 0;
+    params.biPolarFlag = 0;
+    params.statsFlag = 0;
+    params.globalFlag = 0;
+    params.globalChan = [1:numChans];
+    
+    [~] = GenPLIECoG(fullfile(   szFilePath,    szFileName(ii).name),    szOutputPath, params);
+    [~] = GenPLIECoG(fullfile(nonSzFilePath, nonSzFileName(ii).name), nonSzOutputPath, params);
+    
+    
+end % END FOR
+
 
 % EOF

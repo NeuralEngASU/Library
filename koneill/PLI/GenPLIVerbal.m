@@ -1,4 +1,4 @@
-function [filePathOut] = GenPLIChan(filePath, pathOutName, params)
+function [filePathOut] = GenPLIVerbal(filePath, pathOutName, params)
 
 %% Parse Input
 if ~isfield(params, 'winSize');     winSize     = 1;      else winSize     = params.winSize; end

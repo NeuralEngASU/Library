@@ -1569,7 +1569,7 @@ for kk = 1:16
 %         plot(x, repmat(meanBG, 1,size(p,1)), 'r')
 %         plot(x, repmat(meanBG - stdBG, 1,size(p,1)), 'k')
         hold off
-%         ylim([0,1])
+        ylim([0,1])
         % ylim([0.9,1])
         xlim([0,x(end)])
         xlabel('Time, seconds')

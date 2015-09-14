@@ -10,12 +10,7 @@ minpts = (find(diff(rise_fall)>0))+1;
 s = length(maxpts)+length(minpts);
 
 % stopsift = s<4;
-
-<<<<<<< HEAD
 f=(round((length(x))/Fs)*2);
-=======
-f=(round((length(x))/Fs));
->>>>>>> f535cc595bf05d99bee6a68bdd2c9e649ca8c6ae
 
 extdiff=length(maxpts)-length(minpts);
 
