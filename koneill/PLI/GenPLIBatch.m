@@ -122,16 +122,16 @@ end % END FOR
 
 %% Batch Process Seizure PLI
 
-szFilePath = 'E:\data\human CNS\EMD\Sz\ProcData\CAR';
-szOutputPath = 'D:\PLI\SeizureDetection\Sz\CAR';
-nonSzFilePath = 'E:\data\human CNS\EMD\NonSz\ProcData\CAR';
-nonSzOutputPath = 'D:\PLI\SeizureDetection\NonSz\CAR';
+szFilePath = 'E:\data\human CNS\EMD\Sz\clips';
+szOutputPath = 'D:\PLI\SeizureDetection\Sz\HilbertFirst';
+nonSzFilePath = 'E:\data\human CNS\EMD\NonSz\clips';
+nonSzOutputPath = 'D:\PLI\SeizureDetection\NonSz\HilbertFirst';
 
 szFileName = dir([szFilePath, '\*.mat']);
 nonSzFileName = dir([nonSzFilePath, '\*.mat']);
 numFiles = size(szFileName,1);
 
-for ii = 1:numFiles
+for ii =15:numFiles % SKIP NUMBER 15 IN CLIPS
     
     load(fullfile(szFilePath, szFileName(ii).name));
     numChans = size(data,1);
@@ -148,6 +148,21 @@ for ii = 1:numFiles
     params.globalChan = [1:numChans];
     
     [~] = GenPLIECoG(fullfile(   szFilePath,    szFileName(ii).name),    szOutputPath, params);
+    
+    load(fullfile(nonSzFilePath, nonSzFileName(ii).name));
+    numChans = size(data,1);
+    
+    params.winSize = 1;
+    params.Fs = 500;
+    params.chanProcess = [1:numChans];
+    params.surrFlag = 0;
+    params.surrNum = 0;
+    params.rawPhiFlag = 0;
+    params.biPolarFlag = 0;
+    params.statsFlag = 0;
+    params.globalFlag = 0;
+    params.globalChan = [1:numChans];
+    
     [~] = GenPLIECoG(fullfile(nonSzFilePath, nonSzFileName(ii).name), nonSzOutputPath, params);
     
     

@@ -1,4 +1,4 @@
-function [p,r,deltaPhi] = wpliECoG(data1,data2)
+function [p,r] = wpliECoG(data1,data2)
 % PLI Calculate phase-lag index and phase similarity measure
 %
 %   [P,R] = PLI(D1,D2)
@@ -8,16 +8,22 @@ function [p,r,deltaPhi] = wpliECoG(data1,data2)
 %   entries as the number of columns in D1 and D2.
 
 % instantaneous phase
-phi1 = atan(imag(hilbert(data1))./data1);
-phi2 = atan(imag(hilbert(data2))./data2);
+% phi1 = atan2(imag(hilbert(data1)),data1);
+% phi2 = atan2(imag(hilbert(data2)),data2);
+
+phi1 = data1;
+phi2 = data2;
+
 
 % instantaneous phase difference
-deltaPhi = phi2 - phi1;
+deltaPhi = phi1 - phi2;
+
+% Shift points so they lie within -pi:pi
+deltaPhi(deltaPhi < -pi) = deltaPhi(deltaPhi < -pi) + 2*pi;
+deltaPhi(deltaPhi >  pi) = deltaPhi(deltaPhi >  pi) - 2*pi;
 
 % phase similarity measure - average length of the phase-difference vector
-r = abs(mean(exp(1i*deltaPhi),2));
+r = abs(mean(exp(1i*deltaPhi),1))';
 
 % phase-lag index - the average sign of the phase difference
-% p = abs(mean(sign(deltaPhi),2));
-
-p = abs(mean(abs(deltaPhi).*sign(deltaPhi),2))./mean(abs(deltaPhi),2);
+p = abs(mean(abs(deltaPhi).*sign(deltaPhi),1))'./mean(abs(deltaPhi),1)';

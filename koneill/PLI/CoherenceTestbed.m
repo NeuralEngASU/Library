@@ -62,11 +62,11 @@ tmpData2 = detrend(data(:,16,1));
 % [Amp1,Freq1,Ph1]=getHilbVals(tmpData1,5000,1);
 % [Amp2,Freq2,Ph2]=getHilbVals(tmpData2,5000,1);
 
-% phi1 = atan2(imag(hilbert(tmpData1)), tmpData1);
-% phi2 = atan2(imag(hilbert(tmpData2)), tmpData2);
+phi1 = atan2(imag(hilbert(tmpData1)), tmpData1);
+phi2 = atan2(imag(hilbert(tmpData2)), tmpData2);
 
-phi1 = angle(hilbert(tmpData1));
-phi2 = angle(hilbert(tmpData2));
+% phi1 = angle(hilbert(tmpData1));
+% phi2 = angle(hilbert(tmpData2));
 
 % phi1 = atan(imag(hilbert(tmpData1)) ./ tmpData1);
 % phi2 = atan(imag(hilbert(tmpData2)) ./tmpData2);
@@ -91,16 +91,19 @@ title('DeltaPhi')
 %% Plot original signals based on DeltaPhi
 
 colMap = RainbowColormap();
+data1 = data(1,1:length(deltaPhi));
 % deltaPhi = phi2 - phi1;
-timeDeltaPhi = linspace(-1.5,2,size(data,1));
+% timeDeltaPhi = linspace(-5,5,size(data1(:),1));
+timeDeltaPhi = linspace(-5,5,length(deltaPhi));
+timeP = linspace(-5,5,size(p,1));
 
-adjustedPhi1 = phi1 + pi;
-adjustedPhi1 = adjustedPhi1 ./ (2*pi);
+% adjustedPhi1 = phi1 + pi;
+% adjustedPhi1 = adjustedPhi1 ./ (2*pi);
+% 
+% adjustedPhi2 = phi2 + 2*pi;
+% adjustedPhi2 = adjustedPhi2 ./ (4*pi);
 
-adjustedPhi2 = phi2 + 2*pi;
-adjustedPhi2 = adjustedPhi2 ./ (4*pi);
-
-adjustedDeltaPhi = deltaPhi + 0;
+adjustedDeltaPhi = deltaRawPhi(:) + pi;
 adjustedDeltaPhi = adjustedDeltaPhi ./ (2*pi);
 
 
@@ -109,26 +112,47 @@ ax1 = subplot(2,1,1);
 
 pointColor = floor(adjustedDeltaPhi*size(colMap,1));
 colormap(colMap)
-scatter([1,1,1:length(tmpData1)],[0;0;data(:,2,1)], 5, [1;600;pointColor], 'filled');
+scatter([-5,-5,timeDeltaPhi],[0;0;data1(:)], 5, [1;600;pointColor], 'filled');
 % cBar = colorbar('peer', gca,'Ticks', [-pi, -pi/2, 0, pi/2, pi], ...
 %                 'TickLabels', [-pi, -pi/2, 0, pi/2, pi]);
 cBar = colorbar('Ticks', [1, 150, 300, 450, 600],...
-                'TickLabels', {'0', 'pi/2', 'pi', '3*pi/2', '2*pi'});
+                'TickLabels', {'-pi', '-pi/2', '0', 'pi/2', 'pi'});
 cBar.Label.String = 'Delta Phi';
 cBar.Limits = [1,600];
+set(cBar, 'Position', [.8314 .11 .0581 .8150]) 
 
+title('Detrended CAR Signal from C1')
+xlabel('Time, min')
+ylabel('Voltage, uV')
 
 ax2 = subplot(2,1,2);
-pointColor = floor(adjustedDeltaPhi*size(colMap,1));
-colormap(colMap)
-scatter([1,1,1:length(tmpData2)],[0;0;data(:,2,1)], 5, [1;600;pointColor], 'filled');
-% cBar = colorbar('peer', gca,'Ticks', [-pi, -pi/2, 0, pi/2, pi], ...
-%                 'TickLabels', [-pi, -pi/2, 0, pi/2, pi]);
-cBar = colorbar('Ticks', [1, 150, 300, 450, 600],...
-                'TickLabels', {'0', 'pi/2', 'pi', '3*pi/2', '2*pi'});
-cBar.Label.String = 'Delta Phi';
-cBar.Limits = [1,600];
+
+plot(timeP,p2)
+% pointColor = floor(adjustedDeltaPhi*size(colMap,1));
+% colormap(colMap)
+% scatter([1,1,1:length(tmpData2)],[0;0;data(:,2,1)], 5, [1;600;pointColor], 'filled');
+% % cBar = colorbar('peer', gca,'Ticks', [-pi, -pi/2, 0, pi/2, pi], ...
+% %                 'TickLabels', [-pi, -pi/2, 0, pi/2, pi]);
+% cBar = colorbar('Ticks', [1, 150, 300, 450, 600],...
+%                 'TickLabels', {'-pi', '-pi/2', '0', 'pi/2', 'pi'});
+% cBar.Label.String = 'Delta Phi';
+% cBar.Limits = [1,600];
 linkaxes([ax1,ax2], 'x');
+
+title('WPLI From C1:C2')
+xlabel('Time, min')
+ylabel('WPLI')
+
+
+
+pos1=get(ax1, 'Position'); 
+axes(ax1) 
+set(ax1, 'Position', [pos1(1) pos1(2) .6626 pos1(4)]) 
+
+pos2=get(ax2, 'Position'); 
+axes(ax2) 
+set(ax2, 'Position', [pos2(1) pos2(2) .6626 pos2(4)]) 
+
 
 % for kk = 1:size(data,1)
 %     
@@ -162,3 +186,59 @@ xlabel('Time, s')
 ylabel('PLI')
 title('PLI')
 ylim([0,1])
+
+%% GenPLIECoG Debug
+rawPhi1 = rawPhi(:,:,1);
+rawPhi2 = rawPhi(:,:,2);
+
+deltaRawPhi = rawPhi2 - rawPhi1;
+
+deltaRawPhi(deltaRawPhi < -pi) = deltaRawPhi(deltaRawPhi < -pi) + 2*pi;
+deltaRawPhi(deltaRawPhi >  pi) = deltaRawPhi(deltaRawPhi >  pi) - 2*pi;
+
+figure; 
+subplot(3,1,1); plot(p1); title('Reshape -> Hilbert'); 
+subplot(3,1,2); plot(p2); title('Hilbert -> Reshape'); 
+subplot(3,1,3); plot(p1-p2); title('p1-p2');
+
+zoneOfInterest = [400:450];
+
+zoneRawPhi = deltaRawPhi(:,zoneOfInterest);
+zonePhi = deltaPhi(:,zoneOfInterest);
+
+figure; 
+subplot(3,1,1); plot(zonePhi(:)); title('Reshape -> Hilbert'); 
+subplot(3,1,2); plot(zoneRawPhi(:)); title('Hilbert -> Reshape'); 
+subplot(3,1,3); plot(zonePhi(:)-zoneRawPhi(:)); title('p1-p2');
+
+% Circ mean
+
+for ii = 1:size(deltaRawPhi,2)
+
+    p3(ii) = abs(circ_mean(abs(deltaRawPhi(:,ii)).*sign(deltaRawPhi(:,ii)),ones(500,1)))'./circ_mean(abs(deltaRawPhi(:,ii)),ones(500,1))';
+    
+end % END FOR
+
+
+figure; 
+subplot(2,1,1); plot(p1); title('abs(deltaRawPhi'); 
+subplot(2,1,2); plot(p2); title('delatRawPhi'); 
+
+%% winPLI
+
+numPLI = size(p,1);
+winSize = 10;
+
+pliTry = 4;
+
+for ii = 1:(numPLI-winSize)
+    
+    winPLI(ii) = sum(p(ii:ii+winSize,pliTry));
+    
+end % END FOR
+
+plot(winPLI./10); ylim([0,1])
+
+plot(r(:,6))
+
+% EOF

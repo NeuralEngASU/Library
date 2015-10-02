@@ -62,23 +62,21 @@ fprintf('Data Size: %f MB\n',sizeFile)
 load(filePath);
 % Header = openNSx(filePath);
 % Header = Header.MetaTags;
+% Header = header;
 
-% % Biploar
-% if biPolarFlag
-%     data2 = data(1:2:end,:) - data(2:2:end,:);
-%     data = data2;
-%     clear data2
-% end % END IF
-% 
-% if globalFlag
-%     globalAvg = mean(data(globalChan, :));
-%     data = [globalAvg; data];
-% end % END IF globalFlag
+% Detrend Data
+data = detrend(data');
+
+% Find Instantaneous Phase
+data = atan2(imag(hilbert(data)),data);
+
+
+%%
 
 % Find the number of channels
 % numChans = size(chanProcess,1);
-numChans = size(data,1);
-chanProcess = [1:numChans]';
+numChans = size(data,2);
+% chanProcess = [1:numChans]';
 params.chanProcess = chanProcess;
 
 % Set up channel parings
@@ -87,18 +85,13 @@ pairNum      = size(chanPairNums,1);
 
 % Calculate Number of Windows
 % dataLen = Header.DataPoints;
-dataLen = size(testDeltaPhi,1);
+dataLen = size(data,1);
 winNum  = floor(dataLen / (winSize * Fs));
+%%
 
 % Seperate Data into Windows
-% winNum x windowed Data x channel
-% rawWin = permute(reshape(permute(data(:,1:winNum*winSize*Fs)', [1,3,2]), (winSize * Fs),winNum,numChans), [2,1,3]);
-% Extract data for selected channels
-% nsxData = openNSx(filePath, 'read', ['c:', num2str(chanProcess(1)), ':', num2str(chanProcess(end))], ['t:1:', num2str(winNum*winSize*Fs)]);
-
-% rawWin = permute(reshape(permute(nsxData.Data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
-rawWin = permute(reshape(permute(data(:,1:floor(winNum*winSize*Fs))', [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1)), [2,1,3]);
-
+% Windowed data x winNum x channel
+rawWin = reshape(permute(data(1:floor(winNum*winSize*Fs),:), [1,3,2]), floor(winSize * Fs),winNum,size(chanProcess,1));
 
 deltaPhi = 0;
 smp = 0;
@@ -119,6 +112,10 @@ if surrFlag
 else
     pli = zeros(winNum, pairNum, 1);
     
+    % Compute instantaneous phi for all channels
+    for phiChan = 1:size(rawWin,3)
+        phi(:,:,phiChan) = atan2(imag(hilbert(rawWin(:,:,phiChan))),rawWin(:,:,phiChan));
+    end
     % stats
     r   = zeros(winNum, pairNum, 1);
     
@@ -171,29 +168,16 @@ fprintf('*****\nProcessing Data\n')
 timeWatch = tic;
 
 % Create save file
-save(filePathOut,'chanPairNums','Header', 'params','-v7.3');
+save(filePathOut,'chanPairNums','Header', 'params', 'phi','-v7.3');
 
 % For each channel pair
 for cp = 1:pairNum
     
-    
     % pull out data for this iteration
-%     raw1=raw(:,:,chanPairNums(cp,1));
-%     raw2=raw(:,:,chanPairNums(cp,2));
-%     raw1 = rawWin(chanPairNums(cp,1),:,:);
-%     raw2 = rawWin(chanPairNums(cp,2),:,:);
-
-%     % Extract data for selected channels
-%     nsxData = openNSx(filePath, 'read', ['c:', num2str(chanPairNums(cp,1)), ',', num2str(chanPairNums(cp,2))], ['t:1:', num2str(winNum*winSize*Fs)]);
-%     
-%     rawWin = permute(reshape(permute(nsxData.Data(:,1:winNum*winSize*Fs)', [1,3,2]), (winSize * Fs),winNum,2), [2,1,3]);
-    % Seperate Data into Windows
-    % winNum x windowed Data x channel
+    % windowed Data x winNum x channel
     raw1 = double(rawWin(:,:,chanPairNums(cp,1)));
     raw2 = double(rawWin(:,:,chanPairNums(cp,2)));
     
-%     clear nsxData rawWin
-
     if surrFlag
          % Create temporary PLI and R data
          tmpp = nan(winNum, surrNum+1);
@@ -222,9 +206,9 @@ for cp = 1:pairNum
         
         if rawPhiFlag
             tmpDeltaPhi = nan(winNum, 1,(winSize*Fs));
-            [tmpp(:,1),tmpr(:,1), tmpDeltaPhi(:,1,:)] = pli2(raw1, raw2);
+            [tmpp(:,1),tmpr(:,1), tmpDeltaPhi(:,1,:)] = wpliECoG(raw1, raw2);
         else
-            [tmpp(:,1),tmpr(:,1),tmpDeltaPhi(:,1,:)]=pli2(raw1, raw2);
+            [tmpp(:,1),tmpr(:,1)] = wpliECoG(raw1, raw2);
         end % END IF rawPhiFlag
         
         if statsFlag

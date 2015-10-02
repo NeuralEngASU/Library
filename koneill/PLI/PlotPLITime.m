@@ -569,10 +569,10 @@ hold on
 plot([0,0], [0,0], 'r') % Legend Stuff
 plot([0,0], [0,0], 'k') % Legned stuff
 
-[~,~,minutes] = Time2Samp(Header.SzOffset, 500); % Clinical onset
-for tt = 1:size(minutes,1)
-    plot([minutes(tt),minutes(tt)], [0, 1], 'r')
-end % END FOR
+% [~,~,minutes] = Time2Samp(Header.SzOffset, 500); % Clinical onset
+% for tt = 1:size(minutes,1)
+%     plot([minutes(tt),minutes(tt)], [0, 1], 'r')
+% end % END FOR
 
 pData = patch(xx, patchdata, 1);
 lData = plot(x, gridMean2, 'b', 'linewidth', 1);
