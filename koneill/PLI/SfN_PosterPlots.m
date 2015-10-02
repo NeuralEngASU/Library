@@ -1107,7 +1107,7 @@ for desChan = 1:64
     phiPairs = [repmat(desChan,64,1), [1:64]'];
     
     for ii = 1:64
-        deltaPhi = szPhi(:,maxIdx,phiPairs(ii,1)) - szPhi(:,maxIdx,phiPairs(ii,2));
+        deltaPhi = szPhi(:,maxIdx,phiPairs(ii,2)) - szPhi(:,maxIdx,phiPairs(ii,1));
         
         % Shift points so they lie within -pi:pi
         deltaPhi(deltaPhi < -pi) = deltaPhi(deltaPhi < -pi) + 2*pi;
