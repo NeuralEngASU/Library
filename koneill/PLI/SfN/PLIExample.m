@@ -33,14 +33,19 @@ deltaPhi = sOrig - sPhase;
 deltaPhi(deltaPhi < -pi) = deltaPhi(deltaPhi < -pi) + 2*pi;
 deltaPhi(deltaPhi >  pi) = deltaPhi(deltaPhi >  pi) - 2*pi;
 
-p = abs(mean(abs(deltaPhi).*sign(deltaPhi),1))'./mean(abs(deltaPhi),1)';
-% p = abs(mean(sign(deltaPhi)));
+deltaPhi2 = deltaPhi;
+
+deltaPhi2(deltaPhi2 < -pi/2) = deltaPhi2(deltaPhi2 < -pi/2) + pi/2;
+deltaPhi2(deltaPhi2 >  pi/2) = deltaPhi2(deltaPhi2 >  pi/2) - pi/2;
+
+% p = abs(mean(abs(deltaPhi).*sign(deltaPhi),1))'./mean(abs(deltaPhi),1)';
+p = abs(mean(sign(deltaPhi)));
 
 pPlot = circshift(p,floor(length(p)/2));
 phasePlot =linspace(-pi,pi,length(p));
 
 plot(phasePlot,pPlot)
-ylim([0,1])
+% ylim([0,1])
 xlim([-pi,pi+eps])
 
 set(gca, 'XTick', [-pi, -pi/2, 0, pi/2, pi])
