@@ -1,11 +1,11 @@
 % x = testData.Data(20,125000:350000);
 % x = tmpdata(:,1);
 % x = tmpData1;
-x = data(:,1,1);
+x = detrend(data(1,1:300000));%data(:,1,1);
 x = double(x);
 figure;
 % Fs = testData.MetaTags.SamplingFreq; % sampling frequency
-Fs = 5000;
+Fs = 500;
 L = length(x); % length of signal
 t = 0:1/Fs:(L-1)/Fs; % time base
 NFFT = 2^nextpow2(L);

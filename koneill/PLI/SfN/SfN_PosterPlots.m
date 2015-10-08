@@ -139,8 +139,8 @@ fileOfInterest = 58;
 
 % Load Sz
 % load(fullfile(szFilePath, szFileName(fileOfInterest).name));
-szFileName(fileOfInterest).name = '2014PP04Sz4_PLI_winSize1.mat';
-load(fullfile(szFilePath, '2014PP04Sz4_PLI_winSize1.mat'));
+szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+load(fullfile(szFilePath, '2012PP05Sz1_PLI_winSize1.mat'));
 szChanPairNums = chanPairNums;
 szHeader = Header;
 szPLI = p;
@@ -150,8 +150,8 @@ szPhi = phi;
 
 % Load NonSz
 % load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
-nonSzFileName(fileOfInterest).name = '2014PP04NonSz4_PLI_winSize1.mat';
-load(fullfile(nonSzFilePath, '2014PP04NonSz4_PLI_winSize1.mat'));
+nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+load(fullfile(nonSzFilePath, '2012PP05NonSz1_PLI_winSize1.mat'));
 
 nonSzChanPairNums = chanPairNums;
 nonSzHeader = Header;
@@ -163,7 +163,7 @@ nonSzPhi = phi;
 % Clear old data
 clear chanPairNums Header p params phi r
 
-for chanIdx = 1:64
+for chanIdx = 10
 
 % Find Channels to Plot (3x3 grid around chanIdx)
 gridDim = [8,8];
@@ -243,11 +243,16 @@ set(pData, 'FaceAlpha', 0.25)
 set(gca, 'XTick', unique([0:10:patchx(end), patchx(end)]))
 
 ylim([0,1])
-t = title(['Sz: ', szFileName(fileOfInterest).name, '   ', num2str(chansPlot')]);
-ylabel('WPLI')
-xlabel('Time, min')
+% t = title(['Sz: ', szFileName(fileOfInterest).name, '   ', num2str(chansPlot')]);
+title('2012PP05 Seizure Clip 1. Channel 10', 'FontSize', 25)
+ylabel('WPLI', 'FontSize', 25)
+xlabel('Time, min', 'FontSize', 25)
 
-set(t,'Interpreter','none');
+set(gca, 'xtick', [-5:5])
+set(gca, 'xticklabels', [-5:5], 'FontSize', 20)
+box on
+
+% set(t,'Interpreter','none');
 
 % Subplot 2
 subplot(2,1,2) % Non Seizure plot
@@ -263,15 +268,22 @@ set(pData, 'FaceAlpha', 0.25)
 set(gca, 'XTick', unique([0:10:patchx(end), patchx(end)]))
 
 ylim([0,1])
-t = title(['NonSz: ', nonSzFileName(fileOfInterest).name]);
-ylabel('WPLI')
-xlabel('Time, min')
+xlim([-5,5])
+% t = title(['NonSz: ', nonSzFileName(fileOfInterest).name]);
+title('2012PP05 Non-Seizure Clip 1. Channel 10', 'FontSize', 25)
+ylabel('WPLI', 'FontSize', 25)
+xlabel('Time, min', 'FontSize', 25)
+set(gca, 'xtick', [-5:5])
+set(gca, 'xticklabels', [-5:5], 'FontSize', 20)
+% set(t,'Interpreter','none');
 
-set(t,'Interpreter','none');
+% print([szFileName(fileOfInterest).name, '_3x3Grid_Chan', num2str(chanIdx), '.png'],'-dpng')
+% close all
 
-print([szFileName(fileOfInterest).name, '_3x3Grid_Chan', num2str(chanIdx), '.png'],'-dpng')
-close all
-
+    set(gcf, 'units', 'inches')
+    set(gcf, 'Position', [2    2   16    8])
+    set(gcf, 'PaperPosition', [2    2   16    8])
+box on
 end
 
 %% FOR Loop, compare grid to everything else
@@ -427,6 +439,10 @@ numFiles = size(szFileName,1);
 
 fileOfInterest = 1;
 
+
+szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+
 % Load Sz
 load(fullfile(szFilePath, szFileName(fileOfInterest).name));
 szChanPairNums = chanPairNums;
@@ -447,7 +463,7 @@ nonSzPhi = phi;
 
 % Clear old data
 clear chanPairNums Header p params phi r
-
+%%
 integralDiff = [];
 
 for chanIdx = 1:64
@@ -509,7 +525,9 @@ time = linspace(-5,5,sizePLI);
 rawIntegral(chanIdx,1,1) = sum(meanSzPLI)/sizePLI;
 rawIntegral(chanIdx,1,2) = sum(meanNonSzPLI)/sizePLI;
 
-timeWindowBounds = [[-3;-2], [0;1], [1.5;2.5], [3.5; 4.5]];
+% timeWindowBounds = [[-2.33;-2], [0.5;0.88], [1.33;1.66], [3.66; 4]]; % 2014PP04Sz4
+timeWindowBounds = [[-2.33;-2], [0.33;0.66], [1.66;2], [3.66; 4]]; % 2012PP05Sz1
+
 
 timeWindow(:,1) = time >= timeWindowBounds(1,1) & time < timeWindowBounds(2,1);
 timeWindow(:,2) = time >= timeWindowBounds(1,2) & time < timeWindowBounds(2,2);
@@ -519,22 +537,30 @@ timeWindow(:,4) = time >= timeWindowBounds(1,4) & time < timeWindowBounds(2,4);
 
 
 % Channel, time window
-integralDiff(chanIdx,1) = abs(sum(meanSzPLI(timeWindow(:,1)))/60 - sum(meanNonSzPLI(timeWindow(:,1)))/60);
-integralDiff(chanIdx,2) = abs(sum(meanSzPLI(timeWindow(:,2)))/60 - sum(meanNonSzPLI(timeWindow(:,2)))/60);
-integralDiff(chanIdx,3) = abs(sum(meanSzPLI(timeWindow(:,3)))/60 - sum(meanNonSzPLI(timeWindow(:,3)))/60);
-integralDiff(chanIdx,4) = abs(sum(meanSzPLI(timeWindow(:,4)))/60 - sum(meanNonSzPLI(timeWindow(:,4)))/60);
+% integralDiff(chanIdx,1) = abs(sum(meanSzPLI(timeWindow(:,1)))/60 - sum(meanNonSzPLI(timeWindow(:,1)))/60);
+% integralDiff(chanIdx,2) = abs(sum(meanSzPLI(timeWindow(:,2)))/60 - sum(meanNonSzPLI(timeWindow(:,2)))/60);
+% integralDiff(chanIdx,3) = abs(sum(meanSzPLI(timeWindow(:,3)))/60 - sum(meanNonSzPLI(timeWindow(:,3)))/60);
+% integralDiff(chanIdx,4) = abs(sum(meanSzPLI(timeWindow(:,4)))/60 - sum(meanNonSzPLI(timeWindow(:,4)))/60);
+
+% Channel, time window
+integralDiff(chanIdx,1) = abs(sum(meanSzPLI(timeWindow(:,1)))/60);
+integralDiff(chanIdx,2) = abs(sum(meanSzPLI(timeWindow(:,2)))/60);
+integralDiff(chanIdx,3) = abs(sum(meanSzPLI(timeWindow(:,3)))/60);
+integralDiff(chanIdx,4) = abs(sum(meanSzPLI(timeWindow(:,4)))/60);
+
 
 end % END FOR
 
 % integralDiff = permute(integralDiff, [1,3,2]);
 
 % integralDiff = reshape(integralDiff, 8,8,4);
-integralDiff = integralDiff ./ max(integralDiff(:));
-%%
+% integralDiff = integralDiff ./ max(integralDiff(:));
+%
 
 load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
 
-
+% integralDiff2 = integralDiff;
+% integralDiff = integralDiff ./ max(integralDiff(:));
 
 figure;
 mapCol = gray(128);
@@ -542,10 +568,11 @@ border = 0;
 
 layout = reshape(1:64,8,8);
 
-plotData = detrend(data(1,1:sizePLI*500));
+plotData = detrend(data(10,1:sizePLI*500))./1000;
 
 subplot(2,1,1)
 hold on
+box on
 for kk = 1:4
     
     patchx = [timeWindowBounds(1,kk), timeWindowBounds(2,kk), timeWindowBounds(2,kk), timeWindowBounds(1,kk)];
@@ -561,10 +588,17 @@ end % END FOR
 
 
 plot(linspace(-5,5,sizePLI*500), plotData)
-title('Detrended Data from Channel 1')
-xlabel('Time, minutes')
-ylabel('Voltage, uV')
+title('Detrended Data from Electrode 10', 'FontSize', 25)
+xlabel('Time, minutes', 'FontSize', 25)
+ylabel('Voltage, mV', 'FontSize', 25)
 ylim([1.1*min(plotData), 1.1*max(plotData)])
+
+a = get(gca, 'xticklabels');
+b = get(gca, 'yticklabels');
+set(gca, 'xticklabels', a, 'FontSize', 20)
+set(gca, 'yticklabels', b, 'FontSize', 20)
+
+
 
 for ii = 1:4
    
@@ -597,21 +631,21 @@ for ii = 1:4
         pData  = patch( xSubPos, ySubPos, colorPatch);
         
         
-        xlim([0.5,size(layout,1)+1.5])
-        ylim([0.5,size(layout,2)+1.5])
+        xlim([1,size(layout,1)+1])
+        ylim([1,size(layout,2)+1])
         
-        set(pData, 'EdgeColor', 'none')
+        set(pData, 'EdgeColor', 'k')
         axis square
         
         titleString = {'Pre-Ictal', 'Ictal', 'Early Post-Ictal', 'Late Post-Ictal'};
-        
-        title([titleString{ii}, ': ', num2str(timeWindowBounds(1,ii)), ' to ', num2str(timeWindowBounds(2,ii)), ' minutes']) 
+        tmpTitle = sprintf([titleString{ii}, '\n', num2str(timeWindowBounds(1,ii)), ' to ', num2str(timeWindowBounds(2,ii)), ' minutes']);
+        title(tmpTitle, 'FontSize', 25) 
         
         set(gca, 'xtick', [1.5:8.5])
-        set(gca, 'xticklabel', [1:8])
+        set(gca, 'xticklabel', [1:8], 'FontSize', 20)
         
         set(gca, 'ytick', [1.5:8.5])
-        set(gca, 'yticklabel', [1:8:57])
+        set(gca, 'yticklabel', [1:8:57], 'FontSize', 20)
         
         xlabel('Channel')
         ylabel('Channel')
@@ -619,6 +653,10 @@ for ii = 1:4
         
     end % END FOR num LL corners    
 end
+
+set(gcf, 'units', 'inches')
+set(gcf, 'Position', [2    2   16    8])
+set(gcf, 'PaperPosition', [2    2   16    8])
 
 %% Animated Integral Plots of 3x3 Grid 
 
@@ -631,9 +669,9 @@ numFiles = size(szFileName,1);
 
 fileOfInterest = 1;
 
-szFileName(fileOfInterest).name = '2014PP04Sz8_PLI_winSize1.mat';
-nonSzFileName(fileOfInterest).name = '2014PP04NonSz8_PLI_winSize1.mat';
-szDataFile = '2014PP04Sz8.mat';
+szFileName(fileOfInterest).name = '2014PP04Sz4_PLI_winSize1.mat';
+nonSzFileName(fileOfInterest).name = '2014PP04NonSz4_PLI_winSize1.mat';
+szDataFile = '2014PP04Sz4.mat';
 
 % Load Sz
 % load(fullfile(szFilePath, szFileName(fileOfInterest).name));
@@ -1177,6 +1215,148 @@ for ii = interestingSz
     ylim([0,1])
     
 end % END FOR
+
+
+%% PLI Voltage Plots
+
+szFilePath = 'D:\PLI\SeizureDetection\Sz\HilbertFirst';
+nonSzFilePath = 'D:\PLI\SeizureDetection\NonSz\HilbertFirst';
+
+szFileName = dir([szFilePath, '\*.mat']);
+nonSzFileName = dir([nonSzFilePath, '\*.mat']);
+numFiles = size(szFileName,1);
+
+fileOfInterest = 1;
+
+% Load Sz
+% load(fullfile(szFilePath, szFileName(fileOfInterest).name));
+szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+load(fullfile(szFilePath, szFileName(fileOfInterest).name));
+szChanPairNums = chanPairNums;
+szHeader = Header;
+szPLI = p;
+szR = r;
+szParams = params;
+szPhi = phi;
+
+% Load NonSz
+% load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
+nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
+
+nonSzChanPairNums = chanPairNums;
+nonSzHeader = Header;
+nonSzPLI = p;
+nonSzR = r;
+nonSzParams = params;
+nonSzPhi = phi;
+% Clear old data
+clear chanPairNums Header p params phi r
+
+% Load Raw Data
+load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
+szData = data;
+load('E:\data\human CNS\EMD\NonSz\clips\2012PP05NonSz1.mat')
+nonSzData = data;
+
+%%
+
+time = linspace(-5,5,300000);
+
+% Plot
+figure;
+subplot(2,1,1) % Seizure Plot
+plotData1 = detrend(szData(10,1:300000))./1000;
+plot(time, plotData1);
+
+ylim([min(plotData1)*1.1,max(plotData1)*1.1])
+title('2012PP05 Seizure Clip 1. Channel 10', 'FontSize', 25)
+ylabel('Voltage, mV', 'FontSize', 25)
+xlabel('Time, min', 'FontSize', 25)
+
+set(gca, 'xtick', [-5:5])
+set(gca, 'xticklabels', [-5:5], 'FontSize',20)
+box on
+
+% set(t,'Interpreter','none');
+
+% Subplot 2
+plotData2 = detrend(nonSzData(10,1:300000))./1000;
+subplot(2,1,2) % Non Seizure plot
+plot(time, plotData2);
+ylim([min(plotData1)*1.1,max(plotData1)*1.1])
+xlim([-5,5])
+
+title('2012PP05 Non-Seizure Clip 1. Channel 10', 'FontSize', 25)
+ylabel('Voltage, mV', 'FontSize', 25)
+xlabel('Time, min', 'FontSize', 25)
+set(gca, 'xtick', [-5:5])
+set(gca, 'xticklabels', [-5:5], 'FontSize',20)
+
+
+    set(gcf, 'units', 'inches')
+    set(gcf, 'Position', [2    2   16    8])
+    set(gcf, 'PaperPosition', [2    2   16    8])
+box on
+
+%% PLI Voltage Plots
+
+szFilePath = 'D:\PLI\SeizureDetection\Sz\HilbertFirst';
+nonSzFilePath = 'D:\PLI\SeizureDetection\NonSz\HilbertFirst';
+
+szFileName = dir([szFilePath, '\*.mat']);
+nonSzFileName = dir([nonSzFilePath, '\*.mat']);
+numFiles = size(szFileName,1);
+
+fileOfInterest = 1;
+
+% Load Sz
+% load(fullfile(szFilePath, szFileName(fileOfInterest).name));
+szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+load(fullfile(szFilePath, szFileName(fileOfInterest).name));
+szChanPairNums = chanPairNums;
+szHeader = Header;
+szPLI = p;
+szR = r;
+szParams = params;
+szPhi = phi;
+
+% Load NonSz
+% load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
+nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
+
+nonSzChanPairNums = chanPairNums;
+nonSzHeader = Header;
+nonSzPLI = p;
+nonSzR = r;
+nonSzParams = params;
+nonSzPhi = phi;
+% Clear old data
+clear chanPairNums Header p params phi r
+
+% Load Raw Data
+load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
+szData = data;
+
+%% Color legend
+
+c = linspace(0,1,100);
+x = 1:100;
+y = 1:100;
+
+colormap gray
+scatter(x,y,[],c)
+
+colorbar
+
+cbar_handle = findobj(gcf,'tag','Colorbar')
+set(cbar_handle, 'YAxisLocation','Left')
+% set(cbar_handle, 'YLabel', 'Average WPLI')
+% set(cbar_handle,'fontsize',20);
+ylabel(cbar_handle, 'Average WPLI', 'fontsize', 25)
+set(cbar_handle, 'YTick',linspace(0,1,5), 'fontsize', 20)
+
 
 
 % EOF

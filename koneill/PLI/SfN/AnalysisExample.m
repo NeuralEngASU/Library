@@ -67,8 +67,8 @@ for ii = 1:4
         pData  = patch( xSubPos, ySubPos, colorPatch);
         
         
-        xlim([0.5,size(layout,1)+1.5])
-        ylim([0.5,size(layout,2)+1.5])
+        xlim([1,size(layout,1)+1])
+        ylim([1,size(layout,2)+1])
         
         set(pData, 'EdgeColor', 'k')
         axis square
