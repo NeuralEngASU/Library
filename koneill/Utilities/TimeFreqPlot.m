@@ -1,8 +1,8 @@
 % x = testData.Data(20,125000:350000);
 % x = tmpdata(:,1);
 % x = tmpData1;
-x = detrend(data(1,1:300000));%data(:,1,1);
-x = double(x);
+% x = detrend(data(1,1:300000));%data(:,1,1);
+x = double(data(:,1));
 figure;
 % Fs = testData.MetaTags.SamplingFreq; % sampling frequency
 Fs = 500;

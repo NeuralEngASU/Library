@@ -9,9 +9,16 @@ numFiles = size(szFileName,1);
 
 fileOfInterest = 1;
 
+% szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+% nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+% szDataFile = '2012PP05Sz1.mat';
+
+szFileName(fileOfInterest).name = '2014PP04Sz4_PLI_winSize1.mat';
+nonSzFileName(fileOfInterest).name = '2014PP04NonSz4_PLI_winSize1.mat';
+szDataFile = '2014PP04Sz4.mat';
+
 % Load Sz
 % load(fullfile(szFilePath, szFileName(fileOfInterest).name));
-szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
 load(fullfile(szFilePath, szFileName(fileOfInterest).name));
 szChanPairNums = chanPairNums;
 szHeader = Header;
@@ -22,7 +29,6 @@ szPhi = phi;
 
 % Load NonSz
 % load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
-nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
 load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
 
 nonSzChanPairNums = chanPairNums;
@@ -35,7 +41,7 @@ nonSzPhi = phi;
 clear chanPairNums Header p params phi r
 
 % Load Raw Data
-load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
+load(['E:\data\human CNS\EMD\Sz\clips\', szDataFile])
 %% 3x3 PLI direction
 
 timeWindowBounds = [[-5:0.25:4.75]; [-4.75:0.25:5]];
@@ -54,6 +60,7 @@ end % END FOR each timeWindow
 
 u = zeros(64,1,600);
 v = zeros(64,1,600);
+refChan = 65;
 
 for desChan = 1:64
     
@@ -75,7 +82,8 @@ for desChan = 1:64
     % Convert index notation to channel number
     chansPlot = sort(sub2ind([8,8], indPairs2(:,1), indPairs2(:,2)), 'ascend');
     % chansPlot = 1:64;
-    desiredRef = [desChan];
+%     desiredRef = [desChan];
+    desiredRef = refChan;
     
     % Define channel pairs
     if isempty(desiredRef)
@@ -173,7 +181,8 @@ indPairs2 = indPairs(indParisIdx,:);
 
 % Convert index notation to channel number
 chansPlot = sort(sub2ind([8,8], indPairs2(:,1), indPairs2(:,2)), 'ascend');
-desiredRef = [chanIdx];
+% desiredRef = [chanIdx];
+desiredRef = refChan;
 
 % Define channel pairs
 if isempty(desiredRef)
@@ -468,7 +477,7 @@ end
 
 %% Append to AVI
 
-writerObj = VideoWriter('2012PP05Sz1_Direction_5SecBins.avi');
+writerObj = VideoWriter('2014PP04Sz4_OnsetRef_1to1_5SecBins.avi');
 writerObj.FrameRate=10;
 open(writerObj);
 
@@ -476,9 +485,9 @@ open(writerObj);
 
 expr = '(2012PP05Sz1_5Sec_Frame_[0-9]+\.png)';
 
-imFileNames = dir(['D:\PLI\SeizureDetection\AnimatedFigures\2012PP05Sz1_direction\*.png']);
+imFileNames = dir(['D:\PLI\SeizureDetection\AnimatedFigures\2014PP04Sz4_OnsetRef\OnsetRef_1to1\*.png']);
 
-for ii = 1:357
+for ii = 1:117
         
     
     imData = imread(imFileNames(ii).name);

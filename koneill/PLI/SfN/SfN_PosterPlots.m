@@ -465,8 +465,14 @@ nonSzPhi = phi;
 clear chanPairNums Header p params phi r
 %%
 integralDiff = [];
+badChan = [33,32]; % For 2012PP05Sz1
+chanLoop = 1:64;
 
-for chanIdx = 1:64
+for ii = 1:length(badChan)
+    chanLoop = chanLoop(chanLoop ~= badChan(ii));
+end % END FOR
+
+for chanIdx = chanLoop
 
 % Find Channels to Plot (3x3 grid around chanIdx)
 gridDim = [8,8];
@@ -486,6 +492,10 @@ indPairs2 = indPairs(indParisIdx,:);
 % Convert index notation to channel number
 chansPlot = sort(sub2ind([8,8], indPairs2(:,1), indPairs2(:,2)), 'ascend');
 desiredRef = [chanIdx];
+
+for ii = 1:length(badChan)
+    chansPlot = chansPlot(chansPlot ~= badChan(ii));
+end % END FOR
 
 % Define channel pairs
 if isempty(desiredRef)
@@ -556,6 +566,12 @@ end % END FOR
 % integralDiff = reshape(integralDiff, 8,8,4);
 % integralDiff = integralDiff ./ max(integralDiff(:));
 %
+
+
+% maxVal = 0.3211; % 2012PP05Sz1
+maxVal = 0.33;
+% maxVal = 0.1937; % 2014PP04Sz4
+integralDiff = integralDiff ./ maxVal;
 
 load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
 
@@ -1357,6 +1373,256 @@ set(cbar_handle, 'YAxisLocation','Left')
 ylabel(cbar_handle, 'Average WPLI', 'fontsize', 25)
 set(cbar_handle, 'YTick',linspace(0,1,5), 'fontsize', 20)
 
+
+
+%% 3x3 plot from onset
+
+%% Integral Plots of 3x3 subgrids
+
+szFilePath = 'D:\PLI\SeizureDetection\Sz\HilbertFirst';
+nonSzFilePath = 'D:\PLI\SeizureDetection\NonSz\HilbertFirst';
+
+szFileName = dir([szFilePath, '\*.mat']);
+nonSzFileName = dir([nonSzFilePath, '\*.mat']);
+numFiles = size(szFileName,1);
+
+fileOfInterest = 1;
+
+
+szFileName(fileOfInterest).name = '2012PP05Sz1_PLI_winSize1.mat';
+nonSzFileName(fileOfInterest).name = '2012PP05NonSz1_PLI_winSize1.mat';
+
+% Load Sz
+load(fullfile(szFilePath, szFileName(fileOfInterest).name));
+szChanPairNums = chanPairNums;
+szHeader = Header;
+szPLI = p;
+szR = r;
+szParams = params;
+szPhi = phi;
+
+% Load NonSz
+load(fullfile(nonSzFilePath, nonSzFileName(fileOfInterest).name));
+nonSzChanPairNums = chanPairNums;
+nonSzHeader = Header;
+nonSzPLI = p;
+nonSzR = r;
+nonSzParams = params;
+nonSzPhi = phi;
+
+% Clear old data
+clear chanPairNums Header p params phi r
+%%
+integralDiff = [];
+% badChan = [33,23]; % For 2012PP05Sz1
+badChan = []; % For 2014PP04Sz4
+chanLoop = 1:64;
+
+for ii = 1:length(badChan)
+    chanLoop = chanLoop(chanLoop ~= badChan(ii));
+end % END FOR
+
+for chanIdx = chanLoop
+
+% Find Channels to Plot (3x3 grid around chanIdx)
+gridDim = [8,8];
+[ii, jj] = ind2sub(gridDim, chanIdx);
+
+iiNew = [ii-1, ii, ii+1];
+jjNew = [jj-1, jj, jj+1];
+
+% Find index pairs
+[idx2, idx1] = find(true(numel(iiNew),numel(jjNew))); 
+indPairs = [reshape(iiNew(idx1), [], 1), reshape(jjNew(idx2), [], 1)];
+    
+% Remove invalid pairs (where there is a 0 index)
+indParisIdx = (indPairs(:,1) > 0) & (indPairs(:,2) > 0) & (indPairs(:,1) <= gridDim(1)) & (indPairs(:,2) <= gridDim(2));
+indPairs2 = indPairs(indParisIdx,:);
+
+% Convert index notation to channel number
+chansPlot = sort(sub2ind([8,8], indPairs2(:,1), indPairs2(:,2)), 'ascend');
+desiredRef = [chanIdx];
+
+for ii = 1:length(badChan)
+    chansPlot = chansPlot(chansPlot ~= badChan(ii));
+end % END FOR
+
+% Define channel pairs
+if isempty(desiredRef)
+     desiredChanPairs = nchoosek(sort(unique(chansPlot),'ascend'),2);
+else
+    desiredChanPairs = [repmat(desiredRef, size(chansPlot(:),1), 1), chansPlot(:)];
+end % END IF isempty(desiredRef)
+
+for ii = 1:size(desiredChanPairs,1)
+    if desiredChanPairs(ii,1) > desiredChanPairs(ii,2)
+        desiredChanPairs(ii,:) = fliplr(desiredChanPairs(ii,:));
+    end % END IF
+end
+
+idx = zeros(size(szChanPairNums,1),1);
+% Find idicies
+for jj = 1:size(desiredChanPairs,1)
+    idx = idx | ((szChanPairNums(:,1) == desiredChanPairs(jj,1)) & (szChanPairNums(:,2) == desiredChanPairs(jj,2)));
+end
+
+idx = find(idx==1);
+
+sizePLI = size(szPLI,1) * ( size(szPLI,1) <  size(nonSzPLI,1)) + size(nonSzPLI,1) * ( size(szPLI,1) >=  size(nonSzPLI,1));
+
+varSzPLI = var(szPLI(:,idx)');
+varNonSzPLI = var(nonSzPLI(:,idx)');
+
+meanSzPLI = mean(szPLI(1:sizePLI,idx)');
+meanNonSzPLI = mean(nonSzPLI(1:sizePLI,idx)');
+
+timeMax = size(szPLI,1);
+sizeMax = szHeader.params.Fs*timeMax;
+
+time = linspace(-5,5,sizePLI);
+
+% Channel, time window, sz/nonSz
+rawIntegral(chanIdx,1,1) = sum(meanSzPLI)/sizePLI;
+rawIntegral(chanIdx,1,2) = sum(meanNonSzPLI)/sizePLI;
+
+% timeWindowBounds = [[-2.33;-2], [0.5;0.88], [1.33;1.66], [3.66; 4]]; % 2014PP04Sz4
+timeWindowBounds = [[-2.33;-2], [0.33;0.66], [1.66;2], [3.66; 4]]; % 2012PP05Sz1
+
+
+timeWindow(:,1) = time >= timeWindowBounds(1,1) & time < timeWindowBounds(2,1);
+timeWindow(:,2) = time >= timeWindowBounds(1,2) & time < timeWindowBounds(2,2);
+timeWindow(:,3) = time >= timeWindowBounds(1,3) & time < timeWindowBounds(2,3);
+timeWindow(:,4) = time >= timeWindowBounds(1,4) & time < timeWindowBounds(2,4);
+
+
+
+% Channel, time window
+% integralDiff(chanIdx,1) = abs(sum(meanSzPLI(timeWindow(:,1)))/60 - sum(meanNonSzPLI(timeWindow(:,1)))/60);
+% integralDiff(chanIdx,2) = abs(sum(meanSzPLI(timeWindow(:,2)))/60 - sum(meanNonSzPLI(timeWindow(:,2)))/60);
+% integralDiff(chanIdx,3) = abs(sum(meanSzPLI(timeWindow(:,3)))/60 - sum(meanNonSzPLI(timeWindow(:,3)))/60);
+% integralDiff(chanIdx,4) = abs(sum(meanSzPLI(timeWindow(:,4)))/60 - sum(meanNonSzPLI(timeWindow(:,4)))/60);
+
+% Channel, time window
+integralDiff(chanIdx,1) = abs(sum(meanSzPLI(timeWindow(:,1)))/60);
+integralDiff(chanIdx,2) = abs(sum(meanSzPLI(timeWindow(:,2)))/60);
+integralDiff(chanIdx,3) = abs(sum(meanSzPLI(timeWindow(:,3)))/60);
+integralDiff(chanIdx,4) = abs(sum(meanSzPLI(timeWindow(:,4)))/60);
+
+
+end % END FOR
+
+% integralDiff = permute(integralDiff, [1,3,2]);
+
+% integralDiff = reshape(integralDiff, 8,8,4);
+% integralDiff = integralDiff ./ max(integralDiff(:));
+%
+
+
+% maxVal = 0.3211; % 2012PP05Sz1
+% maxVal = 0.33;
+% maxVal = 0.1937; % 2014PP04Sz4
+integralDiff = integralDiff ./ maxVal;
+
+load('E:\data\human CNS\EMD\Sz\clips\2012PP05Sz1.mat')
+
+% integralDiff2 = integralDiff;
+% integralDiff = integralDiff ./ max(integralDiff(:));
+
+figure;
+mapCol = gray(128);
+border = 0;
+
+layout = reshape(1:64,8,8);
+
+plotData = detrend(data(10,1:sizePLI*500))./1000;
+
+subplot(2,1,1)
+hold on
+box on
+for kk = 1:4
+    
+    patchx = [timeWindowBounds(1,kk), timeWindowBounds(2,kk), timeWindowBounds(2,kk), timeWindowBounds(1,kk)];
+    patchy = [2*min(plotData), 2*min(plotData), 2*max(plotData), 2*max(plotData)];
+    
+    pData = patch(patchx, patchy,1);
+    
+    set(pData, 'EdgeColor', 'none')
+    set(pData, 'FaceColor', [0.5,0.5,0.5])
+    set(pData, 'FaceAlpha', 0.25)
+    
+end % END FOR
+
+
+plot(linspace(-5,5,sizePLI*500), plotData)
+title('Detrended Data from Electrode 10', 'FontSize', 25)
+xlabel('Time, minutes', 'FontSize', 25)
+ylabel('Voltage, mV', 'FontSize', 25)
+ylim([1.1*min(plotData), 1.1*max(plotData)])
+
+a = get(gca, 'xticklabels');
+b = get(gca, 'yticklabels');
+set(gca, 'xticklabels', a, 'FontSize', 20)
+set(gca, 'yticklabels', b, 'FontSize', 20)
+
+
+
+for ii = 1:4
+   
+    subplot(2,4,ii+4)
+    
+    % Find Lower Left corner
+    chans = 1:64;
+    [~,chanLLIdx] = intersect(layout,chans);
+    
+    % Subdivide each section into [x,y] sections. Where x and y are layout
+    % dimensions.
+    rowsFix = linspace(0+border,1-border,size(layout,1)+1);
+    
+    colsFix = linspace(0+border,1-border,size(layout,2)+1);
+    
+    for jj = 1:length(chanLLIdx)
+        
+        chanIdx = layout(chanLLIdx(jj));
+        [offx, offy] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx));
+        
+        xSubPos = [rowsFix(1,1), rowsFix(1,end), rowsFix(1,end), rowsFix(1,1)  ] + offx;
+        ySubPos = [colsFix(1,1), colsFix(1,1)  , colsFix(1,end), colsFix(1,end)] + offy;
+        
+        chanIdx2 = layout(chanLLIdx(jj));
+        
+        [xpos, ypos] = ind2sub([size(layout,1),size(layout,2)],find(layout==chanIdx2));
+        
+        colorPatch = mapCol(floor(integralDiff(jj,ii) * 127+1),:);
+        
+        pData  = patch( xSubPos, ySubPos, colorPatch);
+        
+        
+        xlim([1,size(layout,1)+1])
+        ylim([1,size(layout,2)+1])
+        
+        set(pData, 'EdgeColor', 'k')
+        axis square
+        
+        titleString = {'Pre-Ictal', 'Ictal', 'Early Post-Ictal', 'Late Post-Ictal'};
+        tmpTitle = sprintf([titleString{ii}, '\n', num2str(timeWindowBounds(1,ii)), ' to ', num2str(timeWindowBounds(2,ii)), ' minutes']);
+        title(tmpTitle, 'FontSize', 25) 
+        
+        set(gca, 'xtick', [1.5:8.5])
+        set(gca, 'xticklabel', [1:8], 'FontSize', 20)
+        
+        set(gca, 'ytick', [1.5:8.5])
+        set(gca, 'yticklabel', [1:8:57], 'FontSize', 20)
+        
+        xlabel('Channel')
+        ylabel('Channel')
+        box on
+        
+    end % END FOR num LL corners    
+end
+
+set(gcf, 'units', 'inches')
+set(gcf, 'Position', [2    2   16    8])
+set(gcf, 'PaperPosition', [2    2   16    8])
 
 
 % EOF

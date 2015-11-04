@@ -65,10 +65,20 @@ load(filePath);
 % Header = header;
 
 % Detrend Data
-data = detrend(data');
+
+if size(data,1) > size(data,2)
+    data = detrend(data);
+else
+    data = detrend(data');
+end % END IF
 
 % Find Instantaneous Phase
 data = atan2(imag(hilbert(data)),data);
+
+if isempty(chanProcess)
+    chanProcess = [1:size(data,2)]';
+end %END IF
+    
 
 
 %%
