@@ -24,7 +24,7 @@ threshold = {'mode' 'avg' 'var'};
 
 figure;
 pp=1;
-for p = [1 6 7]
+for p = 7:8
     
     filecomp{p} = strncmp(ptnum(p),patnum,8);
     [~,c]= find(filecomp{p}==1);
@@ -48,7 +48,7 @@ for p = [1 6 7]
         s = isnan(center);
         [rs,~] = find(s==0);
         
-        subplot(6,4,pp);
+        subplot(3,2,pp);
 %         set(subplot(3,1,1),'Position',[0.13 0.709 0.6 0.25]);
         plot([0 0],[0 121],'color','r','LineWidth',1);
         hold on;
@@ -77,7 +77,7 @@ for p = [1 6 7]
         y = [-100:1:100];
         plt = {'b' 'r' 'g' 'c' 'm' 'k' '--b' '--r' '--g' '--c' '--m' '--k' '-.b' '-.r' '-.g' '-.c' '-.m' '-.k'};
         
-       subplot(6,4,(pp+4));
+       subplot(3,2,(pp+2));
 %         set(subplot(3,1,2),'Position',[0.13 0.409 0.6 0.25])
 %         subplot(3,1,2)
         plot([0 0],[0 30],'color','r','LineWidth',1);
@@ -102,18 +102,18 @@ for p = [1 6 7]
         ss(t,:) = size(idch,1);
     end
     
-   subplot(6,4,(pp+8));
+   subplot(3,2,(pp+4));
 %     set(subplot(3,1,3),'Position',[0.13 0.11 0.6 0.25]);
 %     set(gca,'Position',[0.13 0.11 0.6 0.25])
 %     subplot(3,1,3)
-    plot([0 0],[0 150],'color','r','LineWidth',1);
+    plot([0 0],[0 200],'color','r','LineWidth',1);
     hold on;
     h = histogram(allsz.var,20,'BinLimits',[-100 100],'FaceColor',[0 0 0],'FaceAlpha',1);
     xlim([-100 100]) 
     set (gca,'xtick',[-100 -80 -60 -40 -20 0 20 40 60 80 100]);
     set (gca,'xticklabel',{'-5' '' '' '' '' '0' '' '' '' '' '5'});
-    set(gca,'ytick',[0 50 100 150]);
-    set(gca,'yticklabel',{'0' '' '100' ''});
+    set(gca,'ytick',[0 50 100 150 200]);
+    set(gca,'yticklabel',{'0' '' '100' '' '200'});
     set (gca,'TickLength',[0.01 0.01]);
     
     clear allsz tt t ss edgess
@@ -143,10 +143,11 @@ for f = 1:size(files,1)
     patnum{f} = files(f).name(1:(iddash-1));
 end
 
+%%
 pltinfo = {'.b' '.r' '.g' '.c' '.m' '.k' '+b' '+r' '+g' '+c' '+m' '+k' 'ob' 'or' 'og' 'oc' 'om' 'ok'};
 threshold = {'mode' 'avg' 'var'};
 pt=5;
-for p = [2 3 8]
+for p = 5:8
     
     filecomp{p} = strncmp(ptnum(p),patnum,8);
     [~,c]= find(filecomp{p}==1);
@@ -170,7 +171,7 @@ for p = [2 3 8]
         s = isnan(center);
         [rs,~] = find(s==0);
         
-        subplot(6,4,(pt+8));
+        subplot(3,2,(pt+4));
 %         set(subplot(3,1,1),'Position',[0.13 0.709 0.6 0.25]);
         plot([0 0],[0 121],'color','r','LineWidth',1);
         hold on;
@@ -223,14 +224,14 @@ for p = [2 3 8]
     end
     
    subplot(6,4,(pt+16));
-    plot([0 0],[0 150],'color','r','LineWidth',1);
+    plot([0 0],[0 200],'color','r','LineWidth',1);
     hold on;
     h = histogram(allsz.var,20,'BinLimits',[-100 100],'FaceColor',[0 0 0],'FaceAlpha',1);
     xlim([-100 100]) 
     set (gca,'xtick',[-100 -80 -60 -40 -20 0 20 40 60 80 100]);
     set (gca,'xticklabel',{'-5' '' '' '' '' '0' '' '' '' '' '5'});
-    set(gca,'ytick',[0 50 100]);
-    set(gca,'yticklabel',{'0' '' '100'});
+    set(gca,'ytick',[0 50 100 150 200]);
+    set(gca,'yticklabel',{'0' '' '100' '' '200'});
     set (gca,'TickLength',[0.01 0.01]);
     
     clear allsz tt t ss edgess

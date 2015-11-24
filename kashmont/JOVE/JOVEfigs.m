@@ -61,12 +61,12 @@ for ch = 1:15
     f = Fs/2*linspace(0,1,NFFT/2+1); % single sided spectrum
     
     % high-pass filter
-    order = 3;
+    order = 5;
     Fc = 3; % cutoff frequency
     [z,p,k] = butter(order,Fc/(Fs/2),'high');
     [SOS,G] = zp2sos(z,p,k);% convert to SOS structure to use filter analysis tool
     
-    x_filt(ch,:) = filtfilt(SOS,G,double(Case3(ch,t)));
+    xfilt = filtfilt(SOS,G,double(C88(:,(1:30*Fs))));%(Case1(ch,t)));
     
 %     subplot(2,3,ch)
 %     plot(x_filt(ch,:))
@@ -220,8 +220,9 @@ st = 4;
 t = [st:(st+L)];
 clear x_filt
 
-for ch = 1:45
-%     x = double(eval(['Case' num2str(c)]));
+for ch =1:126
+     x = double(eval(['C' num2str(ch)]));
+     x = x(:,t);
     Fs = Header.Fs; % sampling frequency
     L = size(t,2); % length of signal
     tt = 0:1/Fs:(L-1)/Fs; % time base
@@ -234,21 +235,24 @@ for ch = 1:45
     [z,p,k] = butter(order,Fc/(Fs/2),'high');
     [SOS,G] = zp2sos(z,p,k);% convert to SOS structure to use filter analysis tool
     
-    x_filt(ch,:) = filtfilt(SOS,G,double(Case6(ch,t)));
+    x_filt(ch,:) = filtfilt(SOS,G,x);
 
     clear z p k SOS G
 end
 
+%%
+
+%maybe +30
 figure;
-for ch = 1:45
-    
-subplot(5,9,ch)
-[pxx,f] = pmtm(x_filt(ch,:),9,NFFT,Fs);
+for ch = 1:15
+  
+subplot(3,5,ch)
+[pxx,f] = pmtm(x_filt(ch+45,:),9,NFFT,Fs);
 % % plot(f,10*log10(pxx))
 % plot(f,pxx
 loglog(f,pxx)
-xlim([10e-1 10e3])
-ylim([10e-18 10e-8])
+xlim([1 10e3])
+ylim([10e-14 10e-3])
 title('Multi-taper Spectrum');
 xlabel('Frequency (Hz)')
 ylabel('Power')
