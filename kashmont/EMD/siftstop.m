@@ -10,7 +10,8 @@ minpts = (find(diff(rise_fall)>0))+1;
 s = length(maxpts)+length(minpts);
 
 % stopsift = s<4;
-f=(round((length(x))/Fs)*2);
+f=2*(round((length(x))/Fs));
+
 
 extdiff=length(maxpts)-length(minpts);
 
@@ -22,7 +23,12 @@ else
     avgdiff=mean(ppdiff);
 end
 
+% Micro
+% stopsift = s<f| avgdiff<(2/1000000);
+
+% Macro
 stopsift = s<f | avgdiff<20;
+
 
 end
 
