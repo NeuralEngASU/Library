@@ -99,7 +99,7 @@ ovlp = 40;
 window_2 = 50;
 [S1,F1,T1,P1] = spectrogram(E10,50,45,nfft,1000); 
 
-%Plot the spectrogram
+%Plot the spectrogramnfft
 figure;
 imagesc(T1,F1,(10*log10(P1))); 
  caxis([0 60]);

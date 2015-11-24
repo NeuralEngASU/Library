@@ -1,17 +1,26 @@
+% F:\2015PP03
 
-filename = 'D:\human CNS\PCH\XLTek_Data\2015PP02_D01_OR.edf';
+function binarydeidentify(file_location)
 
-fid = fopen(filename,'r+');
+files = dir([file_location '\*.edf']);
 
-fseek(fid,8,'bof');
+for f = 1:length(files)
+    
+    % filename = 'D:\human CNS\PCH\XLTek_Data\2015PP02_D01_OR.edf';
+    % fid = fopen(filename,'r+');
+    fid = fopen(['F:\2015PP03\' files(f).name],'r+');
+    
+    fseek(fid,8,'bof');
+    
+    fwrite(fid,[files(f).name '                      ']);
+    
+    fseek(fid,168,'bof');
+    
+    fwrite(fid,'XX.XX.XX');
+    fclose(fid);
+    
+end
 
-fwrite(fid,'2015PP02_D01_OR                      ');
-
-fseek(fid,168,'bof');
-
-fwrite(fid,'XX.XX.XX');
-fclose(fid);
-
-[header] = edfread(filename);
-header
-header.patientID
+% [header] = edfread(['F:\2015PP03\' files(f).name]);
+% header
+% header.patientID
