@@ -16,8 +16,8 @@ function EMDanaly(folderpath,xlfile,ictal_state,datatype)
 
 files = dir([folderpath, '\*.mat']);
 for f = 1:size(files,1)
-%     patnum{f} = files(f).name(1:10);
-    patnum{f} = files(f).name(1:13);
+    patnum{f} = files(f).name(1:10);
+%     patnum{f} = files(f).name(1:13);
 end
 ptnum = unique(patnum);
 
@@ -30,7 +30,7 @@ end
 % load('E:\data\human CNS\EMD\XLvariables\Fs.mat')
 % load('E:\data\human CNS\EMD\XLvariables\sznum.mat')
 % Fs = xlsread(xlfile,ictal_state,'H3:H100');
-Fs = xlsread(xlfile,ictal_state,'F3:F100');
+Fs = xlsread(xlfile,ictal_state,'H3:H100');
 sznum = xlsread(xlfile,ictal_state,'E3:E100');
 
 
@@ -38,16 +38,16 @@ distcomp.feature( 'LocalUseMpiexec', false );
 parpool(32);
 
 for p = 1:size(ptnum,2)
-%     filecomp{p} = strncmp(ptnum(p),patnum,8);
-    filecomp{p} = strncmp(ptnum(p),patnum,11);
+    filecomp{p} = strncmp(ptnum(p),patnum,8);
+%     filecomp{p} = strncmp(ptnum(p),patnum,11);
     [~,c]= find(filecomp{p}==1);
 %     disp (ptnum{p})
     
     for f = c(1):c(end)
         
         name = strcat(ptnum(p),num2str(sznum(f)))
-%         load(['E:\data\human CNS\EMD\Sz\ProcData\CAR\',name{1},'_CAR.mat']);
-        load(['E:\data\human CNS\EMD\NonSz\ProcData\CAR\',name{1},'_CAR.mat']);
+        load(['E:\data\human CNS\EMD\Sz\ProcData\CAR\new\',name{1},'_CAR.mat']);
+%         load(['E:\data\human CNS\EMD\NonSz\ProcData\CAR\new\',name{1},'_CAR.mat']);
 
         
         WinLen = 5;
@@ -74,7 +74,7 @@ for p = 1:size(ptnum,2)
         header.WindowOverlab = OvLp;
         
         %Save processed data and windowing results
-        save(['E:\data\human CNS\EMD\' ictal_state '\WinData\NEW\' name{1} '_CAR_Win.mat'],'IMFperWin','header');
+        save(['E:\data\human CNS\EMD\' ictal_state '\WinData\new\' name{1} '_CAR_Win.mat'],'IMFperWin','header');
            
         clear data IMFperWin IMFs ch header name 
         
