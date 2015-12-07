@@ -39,7 +39,7 @@ for p = 1:size(ptnum,2)
         
         %         load(['/Users/kariashmont/Desktop/Data/WinData/2HzStop/CAR/',files(f).name]);
         name = num2str(patnum{f})
-        load(['E:\data\human CNS\EMD\NonSz\clips\',name,'.mat']);
+        load(['E:\data\human CNS\EMD\Sz\clips\new\',name,'.mat']);
 
     for g = 1:size(grids{p},1)
         sigavg(g,:) = nanmean(data((grids{p}(g,1):grids{p}(g,2)),:));
@@ -59,7 +59,7 @@ for p = 1:size(ptnum,2)
     header.IctalClassifier = name(9:end);
     header.DataType = 'CAR';
    
-    save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\CAR\' num2str(patnum{f}) '_CAR.mat'],'data', 'header','-v7.3');
+    save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\CAR\new\' num2str(patnum{f}) '_CAR.mat'],'data', 'header','-v7.3');
 %     save(['E:\data\human CNS\EMD\NonSz\ProcData\CAR\2014PP07NonSz5_CAR.mat'],'data', 'header','-v7.3');
    
     %save(['E:\data\human CNS\EMD\' ictal_state '\ProcData\DN_CAR\' patnum 'CAR.mat'],'data', 'header');
