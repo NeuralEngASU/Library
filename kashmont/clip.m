@@ -73,9 +73,9 @@ finrec = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
-[~,clpnum] = xlsread(xlfile,ictal_state,'A9');
-[~,day] = xlsread(xlfile,ictal_state,'D9');
-sznum = xlsread(xlfile,ictal_state,'E9');
+[~,clpnum] = xlsread(xlfile,ictal_state,'A3:A33');
+[~,day] = xlsread(xlfile,ictal_state,'D3:D33');
+sznum = xlsread(xlfile,ictal_state,'E3:E33');
 %
 % [~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
 % [~,day] = xlsread(xlfile,ictal_state,'D3:D4');
@@ -96,7 +96,7 @@ for n = 1:length(clpnum)
     ns = header.ns;
     
     %Read total number of channels from excel file
-    totch = xlsread(xlfile,ictal_state,'O9');
+    totch = xlsread(xlfile,ictal_state,'O3:O33');
     
     %Scale data (linear scaling)
     scalefac = (header.physicalMax - header.physicalMin)./(header.digitalMax - header.digitalMin);
@@ -127,7 +127,7 @@ for n = 1:length(clpnum)
     
     %load seizure onset times from excel file
     %     [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
-    [~,clonset] = xlsread(xlfile,ictal_state,'L9');
+    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L33');
     %
     %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
     %         new_hr = str2double(clonset{n}(1:2)) + 24;
@@ -266,7 +266,7 @@ for n = 1:length(clpnum)
     
     %Create a patient number
     sz = num2str(sznum(n));
-    patnum = ([clpnum{n}(1:8) 'NonSz' sz]);
+    patnum = ([clpnum{n}(1:8) ictal_state sz]);
     
 % %%
 %     % %Kevin
@@ -305,7 +305,7 @@ for n = 1:length(clpnum)
     %Create header
     header.PatNum = filename(14:21);
     header.Day = day{1};
-    header.State = 'NonSeizure';
+    header.State = 'Seizure';
     header.Seizure = sznum(n);
     header.Fs = Fs;
     header.ClipStartTime = clpbeg{n};
@@ -316,15 +316,15 @@ for n = 1:length(clpnum)
     %%
     disp('saving')
     %Save the data structure as the patient number created above
-    save(['E:\data\human CNS\EMD\' ictal_state '\clips\' patnum '.mat'],'data','header','-v7.3');
+    save(['E:\data\human CNS\EMD\' ictal_state '\clips\new\' patnum '.mat'],'data','header','-v7.3');
 
     %     figure;
     %     plot(data(50,:));
     %     title (patnum);
     %
-        xlswrite (xlfile,flstrt',ictal_state,'G43');
-        xlswrite (xlfile,clpbeg',ictal_state,'H43');
-        xlswrite (xlfile,clpend',ictal_state,'I43');
+        xlswrite (xlfile,flstrt',ictal_state,'G3:G33');
+        xlswrite (xlfile,clpbeg',ictal_state,'H3:H33');
+        xlswrite (xlfile,clpend',ictal_state,'I3:I33');
     
     clear l Fs clonset clpstart_samps convflstrt convonset fid halfclp offset rec cls_hr cls_mm clp data d P header ns filename n scalefac samps dc center ch clf_hr clf_mm clf_ss clpfhr clpfin clpfin_samps clpfmm clpfss clpshr clpsmm clpsss clpstart patnum szss szmm szhr sz rmzeros r flmm flhr flss cls_ss cls_mmcls_hr
     
