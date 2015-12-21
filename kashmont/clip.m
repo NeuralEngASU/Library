@@ -73,9 +73,9 @@ finrec = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
-[~,clpnum] = xlsread(xlfile,ictal_state,'A3:A33');
-[~,day] = xlsread(xlfile,ictal_state,'D3:D33');
-sznum = xlsread(xlfile,ictal_state,'E3:E33');
+[~,clpnum] = xlsread(xlfile,ictal_state,'A12:A33');
+[~,day] = xlsread(xlfile,ictal_state,'D12:D33');
+sznum = xlsread(xlfile,ictal_state,'E12:E33');
 %
 % [~,clpnum] = xlsread(xlfile,ictal_state,'A3:A4');
 % [~,day] = xlsread(xlfile,ictal_state,'D3:D4');
@@ -96,7 +96,7 @@ for n = 1:length(clpnum)
     ns = header.ns;
     
     %Read total number of channels from excel file
-    totch = xlsread(xlfile,ictal_state,'O3:O33');
+    totch = xlsread(xlfile,ictal_state,'O12:O33');
     
     %Scale data (linear scaling)
     scalefac = (header.physicalMax - header.physicalMin)./(header.digitalMax - header.digitalMin);
@@ -127,7 +127,7 @@ for n = 1:length(clpnum)
     
     %load seizure onset times from excel file
     %     [~,clonset] = xlsread(xlfile,ictal_state,'L9:L10');
-    [~,clonset] = xlsread(xlfile,ictal_state,'L3:L33');
+    [~,clonset] = xlsread(xlfile,ictal_state,'L12:L33');
     %
     %     if (clonset{n}(1:2)) < (flstrt{1}(1:2))
     %         new_hr = str2double(clonset{n}(1:2)) + 24;
@@ -305,7 +305,7 @@ for n = 1:length(clpnum)
     %Create header
     header.PatNum = filename(14:21);
     header.Day = day{1};
-    header.State = 'Seizure';
+    header.State = 'NonSeizure';
     header.Seizure = sznum(n);
     header.Fs = Fs;
     header.ClipStartTime = clpbeg{n};
@@ -322,9 +322,9 @@ for n = 1:length(clpnum)
     %     plot(data(50,:));
     %     title (patnum);
     %
-        xlswrite (xlfile,flstrt',ictal_state,'G3:G33');
-        xlswrite (xlfile,clpbeg',ictal_state,'H3:H33');
-        xlswrite (xlfile,clpend',ictal_state,'I3:I33');
+        xlswrite (xlfile,flstrt',ictal_state,'I12:I33');
+        xlswrite (xlfile,clpbeg',ictal_state,'J12:J33');
+        xlswrite (xlfile,clpend',ictal_state,'K12:K33');
     
     clear l Fs clonset clpstart_samps convflstrt convonset fid halfclp offset rec cls_hr cls_mm clp data d P header ns filename n scalefac samps dc center ch clf_hr clf_mm clf_ss clpfhr clpfin clpfin_samps clpfmm clpfss clpshr clpsmm clpsss clpstart patnum szss szmm szhr sz rmzeros r flmm flhr flss cls_ss cls_mmcls_hr
     

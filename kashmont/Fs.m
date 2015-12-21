@@ -4,8 +4,10 @@ Fs = [];
 
 %Open excel file and read filenames and seizure numbers into array 'clpnum'
 
-[~,clpnum] = xlsread(xlfile,'Sz','A3:A100');
-[~,day] = xlsread(xlfile,'Sz','D3:D100');
+% [~,clpnum] = xlsread(xlfile,'Sz','A3:A100');
+% [~,day] = xlsread(xlfile,'Sz','D3:D100');
+[~,clpnum] = xlsread(xlfile,'Full','A3:A100');
+[~,day] = xlsread(xlfile,'Full','B3:B100');
 
 %Loop through array 'clpnum' to open each file and form the clips
 for n = 1:length(clpnum)
@@ -20,5 +22,6 @@ for n = 1:length(clpnum)
     %Calculate sampling frequency
     Fs{end+1} = ceil(1/(header.duration/header.samples(1)));
     
-    xlswrite (xlfile,Fs','Sz','H3');
+%     xlswrite (xlfile,Fs','Sz','H3');
+    xlswrite (xlfile,Fs,'Full','C3');
 end
