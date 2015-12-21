@@ -1,3 +1,7 @@
+%This funtion performs common average referencing (CAR) on data. CAR is
+%performed on a grid by grid basis (the average signal of a grid is
+%subtracted from each electrode signal for only that grid).
+
 %folderpath = 'E:\data\human CNS\EMD'
 %ictal_state = 'Sz' or 'NonSz'
 %subfolder = 'clips' or 'ProcData\DN'

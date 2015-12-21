@@ -1,3 +1,6 @@
+%This script is used to calculate the number of electrographic events
+%detected using empirical mode decomposition (EMD)
+
 %% Seizure
 
 

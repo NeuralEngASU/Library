@@ -30,7 +30,8 @@ for p = 1:size(ptnum,2)
     for f = c(1):c(end)%convert seizure onset and clip start times to number of samples
         
         name = strcat(ptnum(p),num2str(sznum(f)))
-        load(['E:\data\human CNS\EMD\Sz\WinData\NEW\',name{1},'_CAR_Win.mat']); %seizure
+        load(['E:\data\human CNS\EMD\Sz\WinData\NEW2\',name{1},'_CAR_Win.mat']); %seizure
+%         load(['E:\data\human CNS\EMD\Sz\WinData\NEW\',name{1},'_CAR_Win.mat']); %seizure
         
         clonsetsamps(f,:) = (str2double(clonset{f}(1:2))*3600 + str2double(clonset{f}(4:5))*60 + str2double(clonset{f}(7:8)))*Fs(f);
         clpstrtsamps(f,:) = (str2double(clpstrt{f}(1:2))*3600 + str2double(clpstrt{f}(4:5))*60 + str2double(clpstrt{f}(7:8)))*Fs(f);
@@ -79,42 +80,42 @@ for p = 1:size(ptnum,2)
 
         clear i ii iii c idxx
                 
-%         figure;
-%         subplot(2,1,2)
-%         plot(ss)
-%         xlim([0 200])
-%         hold on;
-%         plot([idx idx],[0 100])
-%         hold off;
+        figure;
+        subplot(2,1,2)
+        plot(ss)
+        xlim([0 200])
+        hold on;
+        plot([idx idx],[0 100])
+        hold off;
         
         
-%         subplot(3,1,3)
-%         plot([0 0],[0 30],'color','k','LineWidth',1.25);
-%         hold on;
-%         h = histogram(center,20,'BinLimits',[-100 100],'FaceColor',[0 0 0.7],'FaceAlpha',1);
-%         [~,jj] = find(h.Values>=5,1);
-%         if isempty(jj)==1
-%             j = NaN;
-%         else j=h.BinEdges(jj)+(.5*h.BinWidth);
-%         end
-%         plot([j j], [0 30],'color',[0.5 0.5 0.5],'LineStyle','--','LineWidth',1.25);
-%         ylabel('Number of Onsets')
-%         xlabel({'Time(min)','Relative to Clinical Onset'})
-%         xlim([-100 99])
-%         hold off;
-%         
-%         subplot(2,1,1)
-%         plot([onsetwin(f) onsetwin(f) ],[0 121],'color','k','LineWidth',1.25);
-%         hold on;
-%         plot([idx idx], [0 121],'color',[0.5 0.5 0.5],'LineStyle','--','LineWidth',1.25);
-%         legend ('Clinical Onset','EMD Onset')
-%         plot(EMDonset(rs,:),rs,'.','color',[0 0 0.7],'MarkerSize',10)
-%         title(sprintf('Seizure 2',p))
-%         title({sprintf('P%d Sz%d Onsets Detected by EMD',p,sz),'  ',})
-%         ylabel('Electrode Number','FontName','TimesNewRoman','FontSize',12)
-%         xlim([0 200])
-%         ylim([0 121])
-%         hold off;
+        subplot(3,1,3)
+        plot([0 0],[0 30],'color','k','LineWidth',1.25);
+        hold on;
+        h = histogram(center,20,'BinLimits',[-100 100],'FaceColor',[0 0 0.7],'FaceAlpha',1);
+        [~,jj] = find(h.Values>=5,1);
+        if isempty(jj)==1
+            j = NaN;
+        else j=h.BinEdges(jj)+(.5*h.BinWidth);
+        end
+        plot([j j], [0 30],'color',[0.5 0.5 0.5],'LineStyle','--','LineWidth',1.25);
+        ylabel('Number of Onsets')
+        xlabel({'Time(min)','Relative to Clinical Onset'})
+        xlim([-100 99])
+        hold off;
+        
+        subplot(2,1,1)
+        plot([onsetwin(f) onsetwin(f) ],[0 121],'color','k','LineWidth',1.25);
+        hold on;
+        plot([idx idx], [0 121],'color',[0.5 0.5 0.5],'LineStyle','--','LineWidth',1.25);
+        legend ('Clinical Onset','EMD Onset')
+        plot(EMDonset(rs,:),rs,'.','color',[0 0 0.7],'MarkerSize',10)
+        title(sprintf('Seizure 2',p))
+        title({sprintf('P%d Sz%d Onsets Detected by EMD',p,sz),'  ',})
+        ylabel('Electrode Number','FontName','TimesNewRoman','FontSize',12)
+        xlim([0 200])
+        ylim([0 121])
+        hold off;
 
         if isnan(idx)
             x = NaN;
@@ -153,11 +154,11 @@ for p = 1:size(ptnum,2)
     clear sz
 end
         
-    sd = []
-for p = 1:8
-    stand = nanstd(abs(EMDinfo{p}.offset*3));
-    sd = [sd stand];
-end
+%     sd = []
+% for p = 1:8
+%     stand = nanstd(abs(EMDinfo{p}.offset*3));
+%     sd = [sd stand];
+% end
 
 %% Non-Seizure
 

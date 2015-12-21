@@ -1,3 +1,6 @@
+%This function is taken from the mathworks.com file exchange. The stoping
+%criteria used is based on the standard deviation between consecutive IMFs.
+
 function imf = filexch_emd(x)
 % Empiricial Mode Decomposition (Hilbert-Huang Transform)
 % imf = emd(x)

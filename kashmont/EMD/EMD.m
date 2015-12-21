@@ -1,3 +1,11 @@
+%This function performs Empirical Mode Decomposition on data, 'h', with a
+%sampling frequency of 'Fs'.
+
+%This function is called by EMDanly.m
+
+%Functions called: siftstop.m, Envelopes.m
+
+
 function [IMFs,residue]=EMD(h,Fs)
 
 IMFs=[];
@@ -35,6 +43,9 @@ while stopsift==0
         
         %%
         %Determine if 'possIMF' meets the criteria of an IMF to stop sifting
+        % An IMF is a data set if:
+            %(1) The number of zero crossings and extrema in the data set are the same or differ at most by 1.
+            %(2) At any point in the data, the mean of the envelope formed by the maxima and minima extrema is zero.
         
         [maxenv,minenv,avgenv]=Envelopes(possIMF);
         %Round avgenv to nearest hundreth

@@ -30,9 +30,8 @@ end
 % % load sampling rates from excel file
 % load('E:\data\human CNS\EMD\XLvariables\Fs.mat')
 % load('E:\data\human CNS\EMD\XLvariables\sznum.mat')
+
 % Fs = xlsread(xlfile,ictal_state,'H3:H100');
-% Fs = xlsread(xlfile,ictal_state,'H3:H100');
-% sznum = xlsread(xlfile,ictal_state,'E3:E100');
 Fs = xlsread(xlfile,'Full','C3:C100');
 % sznum = xlsread(xlfile,ictal_state,'E3:E100');
 
