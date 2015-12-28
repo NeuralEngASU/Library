@@ -3,14 +3,6 @@
 t1 = 6.113e4;
 t2 = 6.304e4;
 
-
-%% Define variables
-Fs = header.Fs; % sampling frequency
-L = size(data,2); % length of signal
-t = 0:1/Fs:(L-1)/Fs; % time base
-NFFT = 1024;%2^14;%2^nextpow2(size(m,2));
-f = Fs/2*linspace(0,1,NFFT/2+1); % single sided spectrum
-
 %% High pass filter
 
 clear z p k SOS G Fc order
@@ -67,13 +59,6 @@ L = size(data,2); % length of signal
 t = 0:1/Fs:(L-1)/Fs; % time base
 NFFT = 1024;%2^14;%2^nextpow2(size(m,2));
 ff = Fs/2*linspace(0,1,NFFT/2+1); % single sided spectrum
-
-%% Notch filter
-wo = 60/(Header.Fs/2);
-bw = wo/35;
-[a,b] = iirnotch(wo,bw);
-rmns = filtfilt(a,b,cl46filt{2});
-fvtool(b,a);
 
 %% Spectrums
 
